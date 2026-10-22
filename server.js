@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '.')));
 
 const dbFile = path.join(__dirname, 'platita.db');
 const db = new sqlite3.Database(dbFile, (err) => {
