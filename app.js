@@ -1,6 +1,6 @@
 // Inicializar Supabase con tus credenciales públicas de la API
 const SUPABASE_URL = 'https://dhmnbvwntcqmgwvbohdt.supabase.co'; // Ej: https://tu-proyecto.supabase.co
-const SUPABASE_ANON_KEY = 'sb_publishable_vmWeDJXqZDwG7Ua2sE6NfQ_m2zIJjlf'; // Tu clave anon public
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTAxMjEsImV4cCI6MjEwODI2NjEyMX0.rho1v1cyZYlUJFXmewHL8Xhp1MxG6KqepWeHxXaJ9Pw'; // Tu clave anon public
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
