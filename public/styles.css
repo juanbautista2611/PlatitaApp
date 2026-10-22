@@ -1,0 +1,335 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  background-color: #05070b;
+  background-image: linear-gradient(rgba(5, 7, 11, 0.85), rgba(5, 7, 11, 0.95)), url('fondo.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: #f1f5f9;
+  min-height: 100vh;
+  padding-bottom: 90px;
+}
+
+/* Contenedor Principal Adaptable a Celular */
+.app-container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.main-content { 
+  padding: 1.25rem 1rem; 
+}
+
+.top-header { margin-bottom: 1.25rem; }
+
+.header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.logo-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.03em;
+}
+
+.header-right { display: flex; align-items: center; gap: 0.6rem; }
+
+.date-badge {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.3rem 0.7rem;
+  border-radius: 2rem;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.user-avatar {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; color: #60a5fa;
+}
+
+.greeting-sub {
+  font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+.welcome-block h2 {
+  font-size: 1.7rem; font-weight: 800; color: #ffffff; margin: 0.1rem 0 0.2rem 0; letter-spacing: -0.02em;
+}
+
+.greeting-desc { font-size: 0.78rem; color: #94a3b8; line-height: 1.35; }
+
+/* Tarjetas Futuristas */
+.card {
+  background: rgba(13, 18, 30, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.15rem;
+  padding: 1rem;
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.7);
+  margin-bottom: 0.75rem;
+}
+
+.balance-main-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(10, 14, 23, 0.95) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+
+.card-icon-box { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; color: #94a3b8; font-weight: 600; }
+.card-icon-box svg { color: #60a5fa; }
+
+.eye-dots { display: flex; align-items: center; gap: 0.3rem; color: #475569; }
+.dots { letter-spacing: 2px; font-size: 0.75rem; }
+
+.balance-amount {
+  font-size: 1.95rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.03em;
+  margin: 0.2rem 0;
+}
+
+.balance-footer { display: flex; align-items: center; margin-top: 0.2rem; }
+.trend-indicator { font-size: 0.68rem; color: #34d399; font-weight: 600; }
+
+/* Grid de Métricas (Responsive exacto) */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.metric-card { padding: 1rem; }
+
+.metric-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+
+.metric-icon {
+  width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center;
+}
+.metric-icon.income { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+.metric-icon.expense { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+.metric-icon.goal { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.metric-icon.available { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+
+.metric-title { font-size: 0.68rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.metric-amount { font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0.2rem 0; letter-spacing: -0.02em; }
+
+.metric-progress-info { font-size: 0.62rem; color: #64748b; margin-top: 0.3rem; margin-bottom: 0.2rem; }
+
+.mini-progress { background: rgba(255, 255, 255, 0.05); height: 3px; border-radius: 2px; overflow: hidden; }
+.fill { height: 100%; border-radius: 2px; }
+.fill.income { background: #34d399; }
+.fill.expense { background: #f87171; }
+.fill.goal { background: #60a5fa; }
+
+/* Formularios y Secciones */
+.form-container-card h3, .section-title-row h3 { 
+  font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 0.65rem; text-transform: uppercase; letter-spacing: 0.04em; 
+}
+
+.futuristic-form { display: flex; flex-direction: column; gap: 0.6rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+.futuristic-form select, .futuristic-form input, .mini-fixed-form input {
+  background: rgba(7, 10, 17, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.65rem;
+  padding: 0.6rem;
+  color: #ffffff;
+  font-size: 0.75rem;
+  outline: none;
+  width: 100%;
+}
+
+.btn-futuristic {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white; border: none; padding: 0.7rem; border-radius: 0.65rem;
+  font-weight: 700; font-size: 0.8rem; cursor: pointer;
+  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.35);
+}
+
+.section-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+
+.mini-fixed-form { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.6rem; }
+.mini-fixed-form input { font-size: 0.72rem; padding: 0.5rem; }
+
+.btn-sub {
+  background: rgba(255, 255, 255, 0.06); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.7rem; cursor: pointer;
+  text-align: center;
+}
+
+/* Listas de Compromisos y Movimientos (Responsivas) */
+.futuristic-list, .futuristic-movements { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+
+.fixed-item-row, .futuristic-movements li {
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(7, 10, 17, 0.5); padding: 0.6rem 0.7rem;
+  border-radius: 0.65rem; border: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.72rem;
+}
+
+.fixed-info { display: flex; flex-direction: column; gap: 0.1rem; }
+.fixed-info strong { color: #f8fafc; font-size: 0.75rem; }
+
+.expense-amount-red { color: #f87171; font-weight: 700; font-size: 0.72rem; }
+.expense-amount-green { color: #34d399; font-weight: 700; font-size: 0.72rem; }
+
+.fixed-actions { display: flex; align-items: center; gap: 0.4rem; }
+.badge-pending {
+  background: rgba(248, 113, 113, 0.12); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.25);
+  padding: 0.25rem 0.5rem; border-radius: 0.4rem; font-size: 0.62rem; font-weight: 700; cursor: pointer;
+}
+.badge-paid {
+  background: rgba(52, 211, 153, 0.12); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.25);
+  padding: 0.25rem 0.5rem; border-radius: 0.4rem; font-size: 0.62rem; font-weight: 700; cursor: pointer;
+}
+.btn-delete-fixed { background: transparent; border: none; color: #64748b; cursor: pointer; font-size: 0.8rem; }
+.btn-delete-fixed:hover { color: #f87171; }
+
+.income-amount { color: #34d399; font-weight: 700; font-size: 0.75rem; }
+.expense-amount { color: #f87171; font-weight: 700; font-size: 0.75rem; }
+
+/* Barra de Navegación Inferior Fija para Celular */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: rgba(10, 14, 22, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex; justify-content: space-around;
+  padding: 0.55rem 0; z-index: 100;
+  box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.7);
+}
+
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; text-decoration: none;
+  color: #64748b; font-size: 0.65rem; font-weight: 600; gap: 0.15rem; transition: color 0.2s;
+}
+.nav-item.active { color: #60a5fa; }
+
+.welcome-body {
+  height: 100vh;
+  display: flex;
+  align-items: flex-end;
+  padding: 2.5rem 1rem;
+  overflow: hidden;
+}
+
+.welcome-overlay {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.welcome-content {
+  background: rgba(13, 18, 30, 0.85);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.75rem;
+  padding: 2.25rem 1.5rem;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-badge {
+  display: inline-block;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.35rem 0.85rem;
+  border-radius: 2rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.welcome-content h1 {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.15rem;
+}
+
+.welcome-user {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #93c5fd;
+  margin-bottom: 0.75rem;
+}
+
+.welcome-subtitle {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.btn-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.btn-welcome:active { transform: scale(0.97); }
+
+
+.btn-reset {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 0.7rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.btn-reset:hover {
+  background: rgba(239, 68, 68, 0.25);
+}

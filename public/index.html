@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Platita - Panel Financiero</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <main class="main-content">
+      <!-- Header Superior -->
+      <header class="top-header">
+        <div class="header-top-row">
+          <h1 class="logo-title">Platita</h1>
+          <div class="header-right">
+            <span id="current-date-badge" class="date-badge">15 Oct 2026</span>
+            <div class="user-avatar">JB</div>
+          </div>
+        </div>
+        <div class="welcome-block">
+          <span class="greeting-sub">Hola Juan,</span>
+          <h2>Así va tu plata</h2>
+          <p class="greeting-desc">Organizá tus ingresos, controlá tus gastos y hacé crecer tus objetivos.</p>
+        </div>
+      </header>
+
+      <!-- Tarjeta Principal: Saldo Actual -->
+      <section class="card balance-main-card">
+        <div class="card-top">
+          <div class="card-icon-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <span>Saldo actual</span>
+          </div>
+          <div class="eye-dots">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="dots">•••</span>
+          </div>
+        </div>
+        <div class="balance-amount" id="current-balance">$ 0</div>
+        <div class="balance-footer">
+          <span class="trend-indicator">Disponible neto real</span>
+        </div>
+      </section>
+
+      <!-- Cuadrícula de Métricas -->
+      <div class="metrics-grid">
+        <div class="card metric-card">
+          <div class="metric-card-top">
+            <div class="metric-icon income">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            </div>
+          </div>
+          <span class="metric-title">Ingresos del mes</span>
+          <div class="metric-amount" id="monthly-income">$ 0</div>
+          <div class="metric-progress-info"><span>Total ingresado</span></div>
+          <div class="mini-progress"><div class="fill income" style="width: 100%;"></div></div>
+        </div>
+
+        <div class="card metric-card">
+          <div class="metric-card-top">
+            <div class="metric-icon expense">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </div>
+          </div>
+          <span class="metric-title">Gastos del mes</span>
+          <div class="metric-amount" id="monthly-expenses">$ 0</div>
+          <div class="metric-progress-info"><span>Compromisos y salidas</span></div>
+          <div class="mini-progress"><div class="fill expense" style="width: 85%;"></div></div>
+        </div>
+      </div>
+
+      <!-- Objetivo de Ahorro y Disponible -->
+      <div class="metrics-grid" style="margin-bottom: 1.25rem;">
+        <div class="card metric-card">
+          <div class="metric-card-top">
+            <div class="metric-icon goal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
+          </div>
+          <span class="metric-title" id="goal-title-display">Ahorro objetivo</span>
+          <div class="metric-amount" id="goal-amount-display" style="font-size: 1.15rem;">$ 0</div>
+          <div class="metric-progress-info"><span id="goal-subtext">Meta de ahorro</span></div>
+          <div class="mini-progress"><div id="goal-progress-fill" class="fill goal" style="width: 0%;"></div></div>
+        </div>
+
+        <div class="card metric-card">
+          <div class="metric-card-top">
+            <div class="metric-icon available">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            </div>
+          </div>
+          <span class="metric-title">Disponible libre</span>
+          <div class="metric-amount" id="free-disposable">$ 0</div>
+          <div class="metric-progress-info"><span>Para próximos gastos</span></div>
+        </div>
+      </div>
+
+      <!-- Panel de Control Rápido (Movimientos) -->
+      <section class="card form-container-card">
+        <h3>Registrar Operación</h3>
+        <form id="transaction-form" class="futuristic-form">
+          <div class="form-row">
+            <select id="tx-type">
+              <option value="expense">Gasto</option>
+              <option value="income">Ingreso</option>
+            </select>
+            <input type="text" id="tx-category" placeholder="Concepto" required>
+          </div>
+          <div class="form-row">
+            <input type="number" id="tx-amount" placeholder="Monto ($)" required>
+            <input type="date" id="tx-date" required>
+          </div>
+          <button type="submit" class="btn-futuristic">Registrar Movimiento</button>
+        </form>
+      </section>
+
+ <!-- Compromisos Fijos (Corregido con id form) -->
+      <section class="card section-box" style="margin-bottom: 1.25rem;">
+        <div class="section-title-row">
+          <h3>Compromisos Fijos</h3>
+        </div>
+        <form id="fixed-form" class="mini-fixed-form">
+          <input type="text" id="fx-name" placeholder="Nombre (Ej: Gimnasio)" required>
+          <input type="number" id="fx-amount" placeholder="Monto ($)" required>
+          <button type="submit" class="btn-sub">Añadir Gasto Fijo</button>
+        </form>
+        <ul id="fixed-list" class="futuristic-list">
+          <li>Cargando compromisos...</li>
+        </ul>
+      </section>
+
+      <!-- Meta de Ahorro -->
+      <section class="card section-box" style="margin-bottom: 1.25rem;">
+        <div class="section-title-row">
+          <h3>Meta de Ahorro</h3>
+        </div>
+        <form id="goal-form" class="mini-fixed-form">
+          <input type="text" id="goal-title" placeholder="Proyecto (Ej: Viaje)" required>
+          <div style="display:flex; gap:0.4rem;">
+            <input type="number" id="goal-target" placeholder="Meta ($)" required>
+            <input type="number" id="goal-current" placeholder="Actual ($)" required>
+          </div>
+          <button type="submit" class="btn-sub">Actualizar Meta</button>
+        </form>
+      </section>
+
+      <!-- Últimos Movimientos -->
+      <section class="card section-box" style="margin-bottom: 2rem;">
+        <div class="section-title-row">
+          <h3>Últimos Movimientos</h3>
+        </div>
+        <ul id="movements-list" class="futuristic-movements">
+          <li>Cargando movimientos...</li>
+        </ul>
+      </section>
+    </main>
+
+<!-- Botón de Reinicio Mensual -->
+      <section class="card" style="margin-bottom: 1.25rem; text-align: center;">
+        <button id="reset-month-btn" class="btn-reset">🔄 Iniciar Nuevo Mes</button>
+      </section>
+
+    <!-- Barra de Navegación Inferior Responsive -->
+    <nav class="bottom-nav">
+      <a href="index.html" class="nav-item active">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Inicio</span>
+      </a>
+      <a href="welcome.html" class="nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        <span>Salir</span>
+      </a>
+    </nav>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
