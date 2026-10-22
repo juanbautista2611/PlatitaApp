@@ -4,10 +4,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Actualizar la fecha del badge superior automáticamente en tiempo real
   actualizarFechaBadge();
 
-  // Colocar la fecha de hoy por defecto en el input de transacciones
   const txDateInput = document.getElementById('tx-date');
   if (txDateInput) {
     txDateInput.value = new Date().toISOString().split('T')[0];
@@ -15,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cargarDatosGenerales();
 
-  // Registrar Operación (Gasto o Ingreso)
+  // Registrar Operación Manual (Gasto o Ingreso)
   const txForm = document.getElementById('transaction-form');
   if (txForm) {
     txForm.addEventListener('submit', async (e) => {
@@ -96,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Función para mostrar la fecha de hoy de manera automática
 function actualizarFechaBadge() {
   const badge = document.getElementById('current-date-badge');
   if (badge) {
@@ -106,7 +103,6 @@ function actualizarFechaBadge() {
   }
 }
 
-// Cargar todos los datos desde Supabase
 async function cargarDatosGenerales() {
   try {
     const { data: transactions } = await supabaseClient.from('transactions').select('*').order('date', { ascending: false });
@@ -119,11 +115,11 @@ async function cargarDatosGenerales() {
   }
 }
 
-// Dibujar los datos en la interfaz
 function renderizarPanel(transactions, fixedExpenses, goals) {
   let totalIncome = 0;
   let totalExpense = 0;
 
+  // 1. Sumar transacciones manuales
   const movementsList = document.getElementById('movements-list');
   if (movementsList) {
     movementsList.innerHTML = '';
@@ -131,7 +127,6 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
       movementsList.innerHTML = '<li>No hay movimientos registrados.</li>';
     } else {
       transactions.forEach(tx => {
-        // Solo sumamos a los totales las transacciones reales guardadas
         if (tx.type === 'income') totalIncome += Number(tx.amount);
         else totalExpense += Number(tx.amount);
 
@@ -145,7 +140,7 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
     }
   }
 
-  // Renderizar Gastos Fijos (Ya no suman doble al totalExpense porque se registran como transacción al pagarse)
+  // 2. Renderizar Gastos Fijos y sumar al total de gastos SOLO si están pagados
   const fixedList = document.getElementById('fixed-list');
   if (fixedList) {
     fixedList.innerHTML = '';
@@ -153,6 +148,10 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
       fixedList.innerHTML = '<li>No hay compromisos fijos.</li>';
     } else {
       fixedExpenses.forEach(fx => {
+        if (fx.status === 'paid') {
+          totalExpense += Number(fx.amount); // Se suma al gasto total del mes limpiamente
+        }
+
         const li = document.createElement('li');
         li.className = 'fixed-item-row';
         li.innerHTML = `
@@ -185,30 +184,17 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
     document.getElementById('goal-progress-fill').style.width = '0%';
   }
 
-  // Actualizar Balances Generales de forma limpia
+  // Actualizar Balances Generales
   document.getElementById('monthly-income').innerText = `$ ${totalIncome}`;
   document.getElementById('monthly-expenses').innerText = `$ ${totalExpense}`;
   document.getElementById('current-balance').innerText = `$ ${totalIncome - totalExpense}`;
   document.getElementById('free-disposable').innerText = `$ ${totalIncome - totalExpense}`;
 }
 
-// Funciones globales de interacción
+// Función global simplificada para alternar estado sin duplicar registros
 window.toggleFixed = async function(id, currentStatus) {
   const newStatus = currentStatus === 'pending' ? 'paid' : 'pending';
-  const { error } = await supabaseClient.from('fixed_expenses').update({ status: newStatus }).eq('id', id);
-
-  if (!error && newStatus === 'paid') {
-    const { data: fxData } = await supabaseClient.from('fixed_expenses').select('*').eq('id', id).single();
-    if (fxData) {
-      const today = new Date().toISOString().split('T')[0];
-      await supabaseClient.from('transactions').insert([{
-        type: 'expense',
-        category: fxData.name,
-        amount: fxData.amount,
-        date: today
-      }]);
-    }
-  }
+  await supabaseClient.from('fixed_expenses').update({ status: newStatus }).eq('id', id);
   cargarDatosGenerales();
 };
 
