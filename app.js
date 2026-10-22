@@ -1,289 +1,183 @@
+// Inicializar Supabase con tus credenciales públicas de la API
+const SUPABASE_URL = 'https://dhmnbvwntcqmgwvbohdt.supabase.co'; // Ej: https://tu-proyecto.supabase.co
+const SUPABASE_ANON_KEY = 'sb_publishable_vmWeDJXqZDwG7Ua2sE6NfQ_m2zIJjlf'; // Tu clave anon public
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 document.addEventListener('DOMContentLoaded', () => {
-  const todayObj = new Date();
-  const options = { day: 'numeric', month: 'short', year: 'numeric' };
-  const dateBadge = document.getElementById('current-date-badge');
-  if (dateBadge) {
-    dateBadge.textContent = todayObj.toLocaleDateString('es-ES', options);
-  }
+  cargarDatosGenerales();
 
-  const dateInput = document.getElementById('tx-date');
-  if (dateInput) {
-    const year = todayObj.getFullYear();
-    const month = String(todayObj.getMonth() + 1).padStart(2, '0');
-    const day = String(todayObj.getDate()).padStart(2, '0');
-    dateInput.value = `${year}-${month}-${day}`;
-  }
-
-  loadAllData();
-
-  // Registrar Movimiento Manual
+  // Evento para registrar transacciones
   const txForm = document.getElementById('transaction-form');
   if (txForm) {
     txForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const newTx = {
-        type: document.getElementById('tx-type').value,
-        category: document.getElementById('tx-category').value,
-        amount: Math.round(parseFloat(document.getElementById('tx-amount').value)),
-        date: document.getElementById('tx-date').value,
-        description: 'Movimiento manual'
-      };
+      const type = document.getElementById('tx-type').value;
+      const category = document.getElementById('tx-category').value;
+      const amount = parseFloat(document.getElementById('tx-amount').value);
+      const date = document.getElementById('tx-date').value;
 
-      const res = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTx)
-      });
+      const { error } = await supabaseClient
+        .from('transactions')
+        .insert([{ type, category, amount: Math.round(amount), date }]);
 
-      if (res.ok) {
+      if (error) {
+        alert('Error al registrar: ' + error.message);
+      } else {
         txForm.reset();
-        if (dateInput) dateInput.value = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
-        loadAllData();
+        cargarDatosGenerales();
       }
     });
   }
 
-  // Registrar Gasto Fijo Permanente
+  // Evento para gastos fijos
   const fixedForm = document.getElementById('fixed-form');
   if (fixedForm) {
     fixedForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nameInput = document.getElementById('fx-name');
-      const amountInput = document.getElementById('fx-amount');
+      const name = document.getElementById('fx-name').value;
+      const amount = parseFloat(document.getElementById('fx-amount').value);
 
-      if (!nameInput || !amountInput) return;
+      const { error } = await supabaseClient
+        .from('fixed_expenses')
+        .insert([{ name, amount: Math.round(amount), category: 'Fijo', status: 'pending' }]);
 
-      const newFixed = {
-        name: nameInput.value.trim(),
-        amount: Math.round(parseFloat(amountInput.value)),
-        category: 'Fijo'
-      };
-
-      try {
-        const res = await fetch('/api/fixed-expenses', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newFixed)
-        });
-
-        if (res.ok) {
-          fixedForm.reset();
-          loadAllData();
-        } else {
-          alert('No se pudo guardar el gasto fijo.');
-        }
-      } catch (err) {
-        console.error('Error al enviar gasto fijo:', err);
+      if (error) {
+        alert('Error al guardar gasto fijo: ' + error.message);
+      } else {
+        fixedForm.reset();
+        cargarDatosGenerales();
       }
     });
   }
 
-  // Registrar Meta de Ahorro
+  // Evento para metas de ahorro
   const goalForm = document.getElementById('goal-form');
   if (goalForm) {
     goalForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const newGoal = {
-        title: document.getElementById('goal-title').value,
-        target_amount: Math.round(parseFloat(document.getElementById('goal-target').value)),
-        current_amount: Math.round(parseFloat(document.getElementById('goal-current').value)),
-        deadline: '2026'
-      };
+      const title = document.getElementById('goal-title').value;
+      const target_amount = parseFloat(document.getElementById('goal-target').value);
+      const current_amount = parseFloat(document.getElementById('goal-current').value);
 
-      const res = await fetch('/api/goals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newGoal)
-      });
+      // Limpiamos metas anteriores y guardamos la nueva
+      await supabaseClient.from('goals').delete().neq('id', 0);
+      const { error } = await supabaseClient
+        .from('goals')
+        .insert([{ title, target_amount: Math.round(target_amount), current_amount: Math.round(current_amount) }]);
 
-      if (res.ok) {
+      if (error) {
+        alert('Error al actualizar meta: ' + error.message);
+      } else {
         goalForm.reset();
-        loadAllData();
+        cargarDatosGenerales();
       }
     });
   }
 
-  // Botón de Reinicio Mensual
+  // Botón de reinicio mensual
   const resetBtn = document.getElementById('reset-month-btn');
   if (resetBtn) {
     resetBtn.addEventListener('click', async () => {
-      if (confirm('¿Estás seguro de iniciar un nuevo mes? Esto limpiará las transacciones del mes anterior y pondrá todos tus gastos fijos como pendientes nuevamente.')) {
-        try {
-          const res = await fetch('/api/reset-month', { method: 'POST' });
-          if (res.ok) {
-            loadAllData();
-            alert('¡Nuevo mes iniciado con éxito!');
-          } else {
-            alert('Error al reiniciar el mes.');
-          }
-        } catch (err) {
-          console.error('Error de red al reiniciar el mes:', err);
-        }
+      if (confirm('¿Estás seguro de iniciar un nuevo mes? Se borrarán los movimientos y se destildarán los fijos.')) {
+        await supabaseClient.from('transactions').delete().neq('id', 0);
+        await supabaseClient.from('fixed_expenses').update({ status: 'pending' }).neq('id', 0);
+        cargarDatosGenerales();
       }
     });
   }
-
 });
 
-async function loadAllData() {
+// Función principal para refrescar toda la interfaz con datos de Supabase
+async function cargarDatosGenerales() {
   try {
-    const resTx = await fetch('/api/transactions');
-    const transactions = await resTx.json();
-
-    const resGoals = await fetch('/api/goals');
-    const goals = await resGoals.json();
-
-    const resFx = await fetch('/api/fixed-expenses');
-    const fixedExpenses = await resFx.json();
-
-    updateDashboard(transactions, goals, fixedExpenses);
-    renderMovements(transactions);
-    renderFixedExpenses(fixedExpenses);
-    updateGoals(goals);
-  } catch (error) {
-    console.error('Error al cargar datos:', error);
-  }
-}
-
-// Actualizar dashboard sumando SOLO los gastos fijos que estén pagados ('paid')
-function updateDashboard(transactions, goals, fixedExpenses) {
-  let income = 0;
-  let expenses = 0;
-
-  transactions.forEach(tx => {
-    if (tx.type === 'income') income += tx.amount;
-    else if (tx.type === 'expense') expenses += tx.amount;
-  });
-
-  // Sumar al gasto total únicamente los compromisos fijos que ya fueron pagados
-  if (fixedExpenses && fixedExpenses.length > 0) {
-    fixedExpenses.forEach(fx => {
-      if (fx.status === 'paid') {
-        expenses += fx.amount;
-      }
-    });
-  }
-
-  let currentSavings = 0;
-  if (goals && goals.length > 0) {
-    currentSavings = goals[0].current_amount || 0;
-  }
-
-  const balance = income - expenses;
-  const freeDisposable = balance - currentSavings;
-
-  document.getElementById('current-balance').textContent = formatCurrency(balance);
-  document.getElementById('monthly-income').textContent = formatCurrency(income);
-  document.getElementById('monthly-expenses').textContent = formatCurrency(expenses);
-  document.getElementById('free-disposable').textContent = formatCurrency(freeDisposable);
-}
-
-function renderMovements(transactions) {
-  const listElement = document.getElementById('movements-list');
-  listElement.innerHTML = '';
-
-  if (transactions.length === 0) {
-    listElement.innerHTML = '<li>Sin movimientos recientes.</li>';
-    return;
-  }
-
-  transactions.slice(0, 5).forEach(tx => {
-    const li = document.createElement('li');
-    const isIncome = tx.type === 'income';
-    const amountClass = isIncome ? 'income-amount' : 'expense-amount';
-    const sign = isIncome ? '+ ' : '- ';
-
-    li.innerHTML = `
-      <div>
-        <strong>${tx.category}</strong><br>
-        <small style="color:#64748b">${tx.date}</small>
-      </div>
-      <span class="${amountClass}">${sign}${formatCurrency(tx.amount)}</span>
-    `;
-    listElement.appendChild(li);
-  });
-}
-
-function renderFixedExpenses(fixedExpenses) {
-  const list = document.getElementById('fixed-list');
-  list.innerHTML = '';
-
-  if (!fixedExpenses || fixedExpenses.length === 0) {
-    list.innerHTML = '<li>Sin compromisos fijos cargados.</li>';
-    return;
-  }
-
-  fixedExpenses.forEach(fx => {
-    const li = document.createElement('li');
-    li.className = 'fixed-item-row';
+    // 1. Obtener Transacciones
+    const { data: transactions } = await supabaseClient.from('transactions').select('*').order('date', { ascending: false });
     
-    const isPaid = fx.status === 'paid';
-    const amountClass = isPaid ? 'expense-amount-green' : 'expense-amount-red';
-    const badgeClass = isPaid ? 'badge-paid' : 'badge-pending';
-    const badgeText = isPaid ? '✓ Pagado' : 'Marcar como Pago';
+    // 2. Obtener Gastos Fijos
+    const { data: fixedExpenses } = await supabaseClient.from('fixed_expenses').select('*');
 
-    li.innerHTML = `
-      <div class="fixed-info">
-        <strong>${fx.name}</strong>
-        <span class="${amountClass}">- ${formatCurrency(fx.amount)}</span>
-      </div>
-      <div class="fixed-actions">
-        <button class="${badgeClass} toggle-btn" data-id="${fx.id}">${badgeText}</button>
-        <button class="btn-delete-fixed delete-btn" data-id="${fx.id}" title="Eliminar">🗑️</button>
-      </div>
-    `;
-    list.appendChild(li);
-  });
+    // 3. Obtener Metas
+    const { data: goals } = await supabaseClient.from('goals').select('*');
 
-  // Vincular eventos de los botones fijos de forma segura
-  document.querySelectorAll('.toggle-btn').forEach(button => {
-    button.addEventListener('click', async (e) => {
-      const id = e.target.getAttribute('data-id');
-      await toggleFixedStatus(id);
-    });
-  });
-
-  document.querySelectorAll('.delete-btn').forEach(button => {
-    button.addEventListener('click', async (e) => {
-      const id = e.target.getAttribute('data-id');
-      await deleteFixedExpense(id);
-    });
-  });
-}
-
-async function toggleFixedStatus(id) {
-  try {
-    const res = await fetch(`/api/fixed-expenses/${id}/toggle`, { method: 'PUT' });
-    if (res.ok) loadAllData();
-  } catch (error) { console.error('Error al cambiar estado:', error); }
-}
-
-async function deleteFixedExpense(id) {
-  if (confirm('¿Eliminar compromiso fijo permanentemente?')) {
-    try {
-      const res = await fetch(`/api/fixed-expenses/${id}`, { method: 'DELETE' });
-      if (res.ok) loadAllData();
-    } catch (error) { console.error('Error al eliminar:', error); }
+    renderizarPanel(transactions || [], fixedExpenses || [], goals || []);
+  } catch (err) {
+    console.error('Error cargando datos de Supabase:', err);
   }
 }
 
-function updateGoals(goals) {
+function renderizarPanel(transactions, fixedExpenses, goals) {
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  const movementsList = document.getElementById('movements-list');
+  if (movementsList) {
+    movementsList.innerHTML = '';
+    if (transactions.length === 0) {
+      movementsList.innerHTML = '<li>No hay movimientos registrados.</li>';
+    } else {
+      transactions.forEach(tx => {
+        if (tx.type === 'income') totalIncome += Number(tx.amount);
+        else totalExpense += Number(tx.amount);
+
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span><b>${tx.category}</b> (${tx.date})</span>
+          <span class="${tx.type}">${tx.type === 'income' ? '+' : '-'}$ ${tx.amount}</span>
+        `;
+        movementsList.appendChild(li);
+      });
+    }
+  }
+
+  // Renderizar Gastos Fijos
+  const fixedList = document.getElementById('fixed-list');
+  if (fixedList) {
+    fixedList.innerHTML = '';
+    fixedExpenses.forEach(fx => {
+      if (fx.status === 'paid') totalExpense += Number(fx.amount);
+
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <span>${fx.name} - $ ${fx.amount} (${fx.status})</span>
+        <button onclick="toggleFixed(${fx.id}, '${fx.status}')">${fx.status === 'pending' ? 'Pagar' : 'Pendiente'}</button>
+      `;
+      fixedList.appendChild(li);
+    });
+  }
+
+  // Renderizar Metas
   if (goals && goals.length > 0) {
     const goal = goals[0];
-    const percentage = Math.min(100, Math.round((goal.current_amount / goal.target_amount) * 100));
-    
-    document.getElementById('goal-title-display').textContent = goal.title;
-    document.getElementById('goal-amount-display').textContent = formatCurrency(goal.current_amount);
-    document.getElementById('goal-subtext').textContent = `Meta: ${formatCurrency(goal.target_amount)} (${percentage}%)`;
-    document.getElementById('goal-progress-fill').style.width = percentage + '%';
-  } else {
-    document.getElementById('goal-title-display').textContent = 'Ahorro objetivo';
-    document.getElementById('goal-amount-display').textContent = '$ 0';
-    document.getElementById('goal-subtext').textContent = 'Sin meta definida';
-    document.getElementById('goal-progress-fill').style.width = '0%';
+    document.getElementById('goal-title-display').innerText = goal.title;
+    document.getElementById('goal-amount-display').innerText = `$ ${goal.current_amount} / ${goal.target_amount}`;
+    const percent = Math.min(100, Math.round((goal.current_amount / goal.target_amount) * 100) || 0);
+    document.getElementById('goal-progress-fill').style.width = `${percent}%`;
   }
+
+  // Actualizar Balances
+  document.getElementById('monthly-income').innerText = `$ ${totalIncome}`;
+  document.getElementById('monthly-expenses').innerText = `$ ${totalExpense}`;
+  document.getElementById('current-balance').innerText = `$ ${totalIncome - totalExpense}`;
+  document.getElementById('free-disposable').innerText = `$ ${totalIncome - totalExpense}`;
 }
 
-function formatCurrency(amount) {
-  return '$ ' + Math.round(amount).toLocaleString('es-AR');
-}
+// Función global para alternar estado de gasto fijo
+window.toggleFixed = async function(id, currentStatus) {
+  const newStatus = currentStatus === 'pending' ? 'paid' : 'pending';
+  await supabaseClient.from('fixed_expenses').update({ status: newStatus }).eq('id', id);
+
+  if (newStatus === 'paid') {
+    const fxData = await supabaseClient.from('fixed_expenses').select('*').eq('id', id).single();
+    if (fxData.data) {
+      const today = new Date().toISOString().split('T')[0];
+      await supabaseClient.from('transactions').insert([{
+        type: 'expense',
+        category: fxData.data.name,
+        amount: fxData.data.amount,
+        date: today
+      }]);
+    }
+  }
+  cargarDatosGenerales();
+};
