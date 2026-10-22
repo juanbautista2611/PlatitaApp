@@ -110,6 +110,11 @@ app.post('/api/reset-month', async (req, res) => {
   res.json({ message: 'Mes reiniciado con éxito' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
-});
+// Configuración para desarrollo local y producción en Vercel
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Servidor corriendo en puerto ${PORT}`);
+  });
+}
+
+module.exports = app;
