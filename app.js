@@ -131,6 +131,7 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
       movementsList.innerHTML = '<li>No hay movimientos registrados.</li>';
     } else {
       transactions.forEach(tx => {
+        // Solo sumamos a los totales las transacciones reales guardadas
         if (tx.type === 'income') totalIncome += Number(tx.amount);
         else totalExpense += Number(tx.amount);
 
@@ -144,7 +145,7 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
     }
   }
 
-  // Renderizar Gastos Fijos
+  // Renderizar Gastos Fijos (Ya no suman doble al totalExpense porque se registran como transacción al pagarse)
   const fixedList = document.getElementById('fixed-list');
   if (fixedList) {
     fixedList.innerHTML = '';
@@ -152,8 +153,6 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
       fixedList.innerHTML = '<li>No hay compromisos fijos.</li>';
     } else {
       fixedExpenses.forEach(fx => {
-        if (fx.status === 'paid') totalExpense += Number(fx.amount);
-
         const li = document.createElement('li');
         li.className = 'fixed-item-row';
         li.innerHTML = `
@@ -186,7 +185,7 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
     document.getElementById('goal-progress-fill').style.width = '0%';
   }
 
-  // Actualizar Balances Generales
+  // Actualizar Balances Generales de forma limpia
   document.getElementById('monthly-income').innerText = `$ ${totalIncome}`;
   document.getElementById('monthly-expenses').innerText = `$ ${totalExpense}`;
   document.getElementById('current-balance').innerText = `$ ${totalIncome - totalExpense}`;
