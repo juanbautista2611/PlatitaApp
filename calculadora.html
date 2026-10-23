@@ -35,12 +35,25 @@
         <button onclick="limpiarDatosVaquita()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.4rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">🗑️ Limpiar Vaquita</button>
       </section>
 
-      <!-- Paso 1: Agregar Participantes -->
+      <!-- Paso 1: Agregar Participantes con Alias -->
       <section class="card form-container-card" style="margin-bottom: 1.25rem;">
-        <h3>1. Integrantes del Grupo</h3>
-        <form id="add-person-form" style="display: flex; gap: 0.4rem; margin-top: 0.75rem;">
-          <input type="text" id="person-name" placeholder="Nombre (Ej: Juan, Cande)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
-          <button type="submit" class="btn-sub" style="padding: 0.4rem 0.8rem; font-size: 0.7rem;">+ Añadir</button>
+        <h3>1. Integrantes y sus Alias (MP)</h3>
+        <form id="add-person-form" style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.75rem;">
+          <div style="display: flex; gap: 0.4rem;">
+            <input type="text" id="person-name" placeholder="Nombre (Ej: Juan)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
+            <select id="person-emoji" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.8rem;">
+              <option value="😎">😎</option>
+              <option value="🍺">🍺</option>
+              <option value="🍕">🍕</option>
+              <option value="🚗">🚗</option>
+              <option value="🔥">🔥</option>
+              <option value="🧠">🧠</option>
+              <option value="👻">👻</option>
+              <option value="🧉">🧉</option>
+            </select>
+          </div>
+          <input type="text" id="person-alias" placeholder="Alias de Mercado Pago (Ej: juan.mp)" style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
+          <button type="submit" class="btn-sub" style="padding: 0.4rem 0.8rem; font-size: 0.7rem; margin-top: 0.2rem;">+ Añadir Integrante</button>
         </form>
         <div id="persons-chips-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;"></div>
       </section>
@@ -68,10 +81,10 @@
         </ul>
       </section>
 
-      <!-- Paso 3: Resultados y Quién le debe a Quién -->
+      <!-- Paso 3: Resultados, Reclamos y Copiar Alias -->
       <section class="card section-box" style="margin-bottom: 2rem;">
         <div class="section-title-row">
-          <h3>3. Resultados y Saldos</h3>
+          <h3>3. Resultados y Saldos de Amigos</h3>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem;">
           <span style="font-size: 0.75rem; color: #94a3b8;">Gasto Total del Grupo:</span>
@@ -83,13 +96,13 @@
           <span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá integrantes y gastos para calcular.</span>
         </div>
 
-        <button onclick="compartirWhatsAppVaquita()" id="btn-compartir-wa" style="display: none; width: 100%; background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center;">📱 Compartir Resumen por WhatsApp</button>
+        <button onclick="compartirWhatsAppVaquita()" id="btn-compartir-wa" style="display: none; width: 100%; background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center; margin-bottom: 0.5rem;">📱 Compartir Resumen General por WhatsApp</button>
       </section>
     </main>
   </div>
 
   <script>
-    let integrantes = JSON.parse(localStorage.getItem('platita_vaquita_integrantes')) || [];
+    let integrantes = JSON.parse(localStorage.getItem('platita_vaquita_integrantes_v2')) || [];
     let gastosVaquita = JSON.parse(localStorage.getItem('platita_vaquita_gastos')) || [];
     let ultimasTransaccionesCalculadas = [];
 
@@ -133,11 +146,18 @@
       const personForm = document.getElementById('add-person-form');
       personForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const input = document.getElementById('person-name');
-        const nombre = input.value.trim();
-        if (nombre && !integrantes.includes(nombre)) {
-          integrantes.push(nombre);
-          input.value = '';
+        const inputNombre = document.getElementById('person-name');
+        const inputAlias = document.getElementById('person-alias');
+        const selectEmoji = document.getElementById('person-emoji');
+
+        const nombre = inputNombre.value.trim();
+        const alias = inputAlias.value.trim() || 'Sin alias';
+        const emoji = selectEmoji.value;
+
+        if (nombre && !integrantes.some(p => p.nombre === nombre)) {
+          integrantes.push({ nombre, alias, emoji });
+          inputNombre.value = '';
+          inputAlias.value = '';
           guardarYActualizar();
         }
       });
@@ -158,7 +178,7 @@
     });
 
     function guardarYActualizar() {
-      localStorage.setItem('platita_vaquita_integrantes', JSON.stringify(integrantes));
+      localStorage.setItem('platita_vaquita_integrantes_v2', JSON.stringify(integrantes));
       localStorage.setItem('platita_vaquita_gastos', JSON.stringify(gastosVaquita));
       actualizarInterfaz();
     }
@@ -167,14 +187,14 @@
       if (confirm('¿Estás seguro de borrar todos los datos de esta vaquita?')) {
         integrantes = [];
         gastosVaquita = [];
-        localStorage.removeItem('platita_vaquita_integrantes');
+        localStorage.removeItem('platita_vaquita_integrantes_v2');
         localStorage.removeItem('platita_vaquita_gastos');
         actualizarInterfaz();
       }
     }
 
     function eliminarPersona(nombre) {
-      integrantes = integrantes.filter(p => p !== nombre);
+      integrantes = integrantes.filter(p => p.nombre !== nombre);
       gastosVaquita = gastosVaquita.filter(g => g.payer !== nombre);
       guardarYActualizar();
     }
@@ -182,6 +202,26 @@
     function eliminarGasto(id) {
       gastosVaquita = gastosVaquita.filter(g => g.id !== id);
       guardarYActualizar();
+    }
+
+    function copiarAlias(alias) {
+      if (!alias || alias === 'Sin alias') {
+        alert('Esta persona no cargó su alias de Mercado Pago.');
+        return;
+      }
+      navigator.clipboard.writeText(alias).then(() => {
+        alert(`¡Alias "${alias}" copiado al portapapeles! Ya podés pegarlo en Mercado Pago 💳`);
+      }).catch(() => {
+        alert('No se pudo copiar el alias automáticamente.');
+      });
+    }
+
+    function reclamarWhatsApp(deudor, acreedor, monto) {
+      const acreedorObj = integrantes.find(p => p.nombre === acreedor);
+      const aliasTexto = acreedorObj && acreedorObj.alias !== 'Sin alias' ? ` (Alias: ${acreedorObj.alias})` : '';
+      const texto = `Hola ${deudor}! 👋 Te escribo porque quedaron pendientes ${formatearDinero(monto)} de la vaquita para ${acreedor}${aliasTexto}. ¡Avisame cuando puedas transferir! 🍻`;
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+      window.open(url, '_blank');
     }
 
     function actualizarInterfaz() {
@@ -198,12 +238,12 @@
       integrantes.forEach(p => {
         const chip = document.createElement('div');
         chip.style.cssText = 'background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem; display: flex; align-items: center; gap: 0.4rem;';
-        chip.innerHTML = `${p} <span style="cursor: pointer; font-weight: bold; color: #f87171;" onclick="eliminarPersona('${p}')">×</span>`;
+        chip.innerHTML = `${p.emoji} ${p.nombre} <span style="font-size: 0.6rem; color: #94a3b8;">(${p.alias})</span> <span style="cursor: pointer; font-weight: bold; color: #f87171;" onclick="eliminarPersona('${p.nombre}')">×</span>`;
         chipsContainer.appendChild(chip);
 
         const opt = document.createElement('option');
-        opt.value = p;
-        opt.innerText = p;
+        opt.value = p.nombre;
+        opt.innerText = `${p.emoji} ${p.nombre}`;
         selectPayer.appendChild(opt);
       });
 
@@ -213,12 +253,14 @@
         expensesListUl.innerHTML = '<li style="text-align: center; color: #64748b; font-size: 0.75rem;">No hay gastos cargados aún.</li>';
       } else {
         gastosVaquita.forEach(g => {
+          const personaPaga = integrantes.find(p => p.nombre === g.payer);
+          const icono = personaPaga ? personaPaga.emoji : '👤';
           const li = document.createElement('li');
           li.className = 'fixed-item-row';
           li.innerHTML = `
             <div class="fixed-info">
               <strong>${g.desc}</strong>
-              <span style="font-size: 0.7rem; color: #94a3b8;">Pagó: ${g.payer}</span>
+              <span style="font-size: 0.7rem; color: #94a3b8;">Pagó: ${icono} ${g.payer}</span>
               <span class="expense-amount">${formatearDinero(g.amount)}</span>
             </div>
             <div class="fixed-actions">
@@ -239,7 +281,9 @@
 
       let totalGeneral = 0;
       const pagadoPorPersona = {};
-      integrantes.forEach(p => pagadoPorPersona[p] = 0);
+      const nombresIntegrantes = integrantes.map(p => p.nombre);
+
+      nombresIntegrantes.forEach(p => pagadoPorPersona[p] = 0);
 
       gastosVaquita.forEach(g => {
         totalGeneral += g.amount;
@@ -250,15 +294,15 @@
 
       totalAmountEl.innerText = formatearDinero(totalGeneral);
 
-      if (integrantes.length === 0 || totalGeneral === 0) {
+      if (nombresIntegrantes.length === 0 || totalGeneral === 0) {
         resultsContainer.innerHTML = '<span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá integrantes y gastos para calcular.</span>';
         if (btnWa) btnWa.style.display = 'none';
         return;
       }
 
-      const cuotaParte = totalGeneral / integrantes.length;
+      const cuotaParte = totalGeneral / nombresIntegrantes.length;
       const balances = [];
-      integrantes.forEach(p => {
+      nombresIntegrantes.forEach(p => {
         const balance = pagadoPorPersona[p] - cuotaParte;
         balances.push({ nombre: p, balance: balance });
       });
@@ -290,42 +334,4 @@
       }
 
       if (ultimasTransaccionesCalculadas.length === 0) {
-        resultsContainer.innerHTML = '<div style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0.6rem; border-radius: 0.4rem; text-align: center; font-size: 0.75rem; font-weight: 600;">✨ ¡Cuentas saldadas! Nadie le debe nada a nadie.</div>';
-        if (btnWa) btnWa.style.display = 'none';
-      } else {
-        ultimasTransaccionesCalculadas.forEach(t => {
-          const div = document.createElement('div');
-          div.style.cssText = 'background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 0.6rem; border-radius: 0.4rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;';
-          div.innerHTML = `
-            <span style="color: #f1f5f9;"><strong>${t.de}</strong> le debe a <strong>${t.a}</strong></span>
-            <span style="color: #34d399; font-weight: 700;">${formatearDinero(t.monto)}</span>
-          `;
-          resultsContainer.appendChild(div);
-        });
-        if (btnWa) btnWa.style.display = 'block';
-      }
-    }
-
-    function compartirWhatsAppVaquita() {
-      let texto = `📊 *RESUMEN DE VAQUITA - PLATITA* 📊\n\n`;
-      texto += `👥 *Integrantes:* ${integrantes.join(', ')}\n`;
-      texto += `💰 *Gasto Total:* ${document.getElementById('total-vaquita-amount').innerText}\n\n`;
-      texto += `📝 *Detalle de Gastos:* \n`;
-      
-      gastosVaquita.forEach(g => {
-        texto += `• ${g.desc}: ${formatearDinero(g.amount)} (Pagó ${g.payer})\n`;
-      });
-
-      texto += `\n💸 *CÓMO SALDAR CUENTAS:*\n`;
-      ultimasTransaccionesCalculadas.forEach(t => {
-        texto += `👉 *${t.de}* le debe a *${t.a}* ➔ *${formatearDinero(t.monto)}*\n`;
-      });
-
-      texto += `\n✨ _Calculado con Platita App_`;
-
-      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
-      window.open(url, '_blank');
-    }
-  </script>
-</body>
-</html>
+        resultsContainer.innerHTML = '<div style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3);

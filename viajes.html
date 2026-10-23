@@ -35,12 +35,24 @@
         <button onclick="limpiarDatosViaje()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.4rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">🗑️ Limpiar Viaje</button>
       </section>
 
-      <!-- Paso 1: Integrantes del Viaje -->
+      <!-- Paso 1: Integrantes del Viaje con Alias -->
       <section class="card form-container-card" style="margin-bottom: 1.25rem;">
-        <h3>1. Viajeros del Grupo</h3>
-        <form id="add-traveler-form" style="display: flex; gap: 0.4rem; margin-top: 0.75rem;">
-          <input type="text" id="traveler-name" placeholder="Nombre (Ej: Juan, Gabi)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
-          <button type="submit" class="btn-sub" style="padding: 0.4rem 0.8rem; font-size: 0.7rem;">+ Añadir</button>
+        <h3>1. Viajeros y sus Alias (MP)</h3>
+        <form id="add-traveler-form" style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.75rem;">
+          <div style="display: flex; gap: 0.4rem;">
+            <input type="text" id="traveler-name" placeholder="Nombre (Ej: Juan)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
+            <select id="traveler-emoji" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.8rem;">
+              <option value="🧳">🧳</option>
+              <option value="✈️">✈️</option>
+              <option value="🕶️">🕶️</option>
+              <option value="🏖️">🏖️</option>
+              <option value="🚗">🚗</option>
+              <option value="🧉">🧉</option>
+              <option value="📸">📸</option>
+            </select>
+          </div>
+          <input type="text" id="traveler-alias" placeholder="Alias de Mercado Pago (Ej: juan.viaje)" style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
+          <button type="submit" class="btn-sub" style="padding: 0.4rem 0.8rem; font-size: 0.7rem; margin-top: 0.2rem;">+ Añadir Viajero</button>
         </form>
         <div id="travelers-chips-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;"></div>
       </section>
@@ -55,7 +67,7 @@
             </select>
           </div>
           <div class="form-row" style="margin-bottom: 0.4rem;">
-            <input type="text" id="expense-travel-desc" placeholder="Concepto (Ej: Hotel, Alquiler de Auto)" required style="width: 100%;">
+            <input type="text" id="expense-travel-desc" placeholder="Concepto (Ej: Hotel, Nafta)" required style="width: 100%;">
           </div>
           <div class="form-row" style="margin-bottom: 0.4rem;">
             <input type="text" inputmode="numeric" id="expense-travel-amount" placeholder="$ 50.000" required oninput="formatearInputMoneda(this)" style="width: 100%;">
@@ -76,7 +88,7 @@
         </ul>
       </section>
 
-      <!-- Paso 3: Resultados de Cuentas del Viaje -->
+      <!-- Paso 3: Resultados, Copiar Alias y Reclamos -->
       <section class="card section-box" style="margin-bottom: 2rem;">
         <div class="section-title-row">
           <h3>3. Balance y Deudas del Viaje</h3>
@@ -91,13 +103,13 @@
           <span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá viajeros y gastos para calcular.</span>
         </div>
 
-        <button onclick="compartirWhatsAppViaje()" id="btn-compartir-wa-viaje" style="display: none; width: 100%; background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center;">📱 Compartir Resumen de Viaje</button>
+        <button onclick="compartirWhatsAppViaje()" id="btn-compartir-wa-viaje" style="display: none; width: 100%; background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center;">📱 Compartir Resumen General de Viaje</button>
       </section>
     </main>
   </div>
 
   <script>
-    let viajeros = JSON.parse(localStorage.getItem('platita_viaje_viajeros')) || [];
+    let viajeros = JSON.parse(localStorage.getItem('platita_viaje_viajeros_v2')) || [];
     let gastosViaje = JSON.parse(localStorage.getItem('platita_viaje_gastos')) || [];
     let ultimasTransaccionesViajeCalculadas = [];
 
@@ -141,11 +153,18 @@
       const travelerForm = document.getElementById('add-traveler-form');
       travelerForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const input = document.getElementById('traveler-name');
-        const nombre = input.value.trim();
-        if (nombre && !viajeros.includes(nombre)) {
-          viajeros.push(nombre);
-          input.value = '';
+        const inputNombre = document.getElementById('traveler-name');
+        const inputAlias = document.getElementById('traveler-alias');
+        const selectEmoji = document.getElementById('traveler-emoji');
+
+        const nombre = inputNombre.value.trim();
+        const alias = inputAlias.value.trim() || 'Sin alias';
+        const emoji = selectEmoji.value;
+
+        if (nombre && !viajeros.some(v => v.nombre === nombre)) {
+          viajeros.push({ nombre, alias, emoji });
+          inputNombre.value = '';
+          inputAlias.value = '';
           guardarYActualizarViaje();
         }
       });
@@ -181,7 +200,7 @@
     });
 
     function guardarYActualizarViaje() {
-      localStorage.setItem('platita_viaje_viajeros', JSON.stringify(viajeros));
+      localStorage.setItem('platita_viaje_viajeros_v2', JSON.stringify(viajeros));
       localStorage.setItem('platita_viaje_gastos', JSON.stringify(gastosViaje));
       actualizarInterfazViaje();
     }
@@ -190,14 +209,14 @@
       if (confirm('¿Estás seguro de borrar todos los datos y gastos de este viaje?')) {
         viajeros = [];
         gastosViaje = [];
-        localStorage.removeItem('platita_viaje_viajeros');
+        localStorage.removeItem('platita_viaje_viajeros_v2');
         localStorage.removeItem('platita_viaje_gastos');
         actualizarInterfazViaje();
       }
     }
 
     function eliminarViajero(nombre) {
-      viajeros = viajeros.filter(v => v !== nombre);
+      viajeros = viajeros.filter(v => v.nombre !== nombre);
       gastosViaje = gastosViaje.filter(g => g.payer !== nombre);
       gastosViaje.forEach(g => {
         g.participants = g.participants.filter(p => p !== nombre);
@@ -210,6 +229,26 @@
       guardarYActualizarViaje();
     }
 
+    function copiarAlias(alias) {
+      if (!alias || alias === 'Sin alias') {
+        alert('Esta persona no cargó su alias de Mercado Pago.');
+        return;
+      }
+      navigator.clipboard.writeText(alias).then(() => {
+        alert(`¡Alias "${alias}" copiado al portapapeles! Ya podés pegarlo en Mercado Pago 💳`);
+      }).catch(() => {
+        alert('No se pudo copiar el alias automáticamente.');
+      });
+    }
+
+    function reclamarWhatsAppViaje(deudor, acreedor, monto) {
+      const acreedorObj = viajeros.find(v => v.nombre === acreedor);
+      const aliasTexto = acreedorObj && acreedorObj.alias !== 'Sin alias' ? ` (Alias: ${acreedorObj.alias})` : '';
+      const texto = `Hola ${deudor}! ✈️ Te escribo porque quedaron pendientes ${formatearDinero(monto)} del viaje con ${acreedor}${aliasTexto}. ¡Avisame cuando puedas transferir! 🧉`;
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+      window.open(url, '_blank');
+    }
+
     function actualizarInterfazViaje() {
       const chipsContainer = document.getElementById('travelers-chips-container');
       const selectPayer = document.getElementById('expense-travel-payer');
@@ -219,7 +258,9 @@
       selectPayer.innerHTML = '<option value="">¿Quién pagó este gasto?</option>';
       checkboxesContainer.innerHTML = '';
 
-      if (viajeros.length === 0) {
+      const nombresViajeros = viajeros.map(v => v.nombre);
+
+      if (nombresViajeros.length === 0) {
         chipsContainer.innerHTML = '<span style="color: #64748b; font-size: 0.7rem;">No hay viajeros aún.</span>';
         checkboxesContainer.innerHTML = '<span style="color: #64748b; font-size: 0.7rem;">Agregá viajeros primero.</span>';
       }
@@ -227,17 +268,17 @@
       viajeros.forEach(v => {
         const chip = document.createElement('div');
         chip.style.cssText = 'background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem; display: flex; align-items: center; gap: 0.4rem;';
-        chip.innerHTML = `${v} <span style="cursor: pointer; font-weight: bold; color: #f87171;" onclick="eliminarViajero('${v}')">×</span>`;
+        chip.innerHTML = `${v.emoji} ${v.nombre} <span style="font-size: 0.6rem; color: #94a3b8;">(${v.alias})</span> <span style="cursor: pointer; font-weight: bold; color: #f87171;" onclick="eliminarViajero('${v.nombre}')">×</span>`;
         chipsContainer.appendChild(chip);
 
         const opt = document.createElement('option');
-        opt.value = v;
-        opt.innerText = v;
+        opt.value = v.nombre;
+        opt.innerText = `${v.emoji} ${v.nombre}`;
         selectPayer.appendChild(opt);
 
         const label = document.createElement('label');
         label.style.cssText = 'font-size: 0.7rem; color: #f1f5f9; display: flex; align-items: center; gap: 0.3rem; cursor: pointer;';
-        label.innerHTML = `<input type="checkbox" class="participant-chk" value="${v}" checked style="accent-color: #3b82f6;"> ${v}`;
+        label.innerHTML = `<input type="checkbox" class="participant-chk" value="${v.nombre}" checked style="accent-color: #3b82f6;"> ${v.emoji} ${v.nombre}`;
         checkboxesContainer.appendChild(label);
       });
 
@@ -247,12 +288,14 @@
         expensesListUl.innerHTML = '<li style="text-align: center; color: #64748b; font-size: 0.75rem;">No hay gastos de viaje cargados.</li>';
       } else {
         gastosViaje.forEach(g => {
+          const viajeroPaga = viajeros.find(v => v.nombre === g.payer);
+          const icono = viajeroPaga ? viajeroPaga.emoji : '👤';
           const li = document.createElement('li');
           li.className = 'fixed-item-row';
           li.innerHTML = `
             <div class="fixed-info">
               <strong>${g.desc}</strong>
-              <span style="font-size: 0.7rem; color: #94a3b8;">Pagó: ${g.payer} (${g.participants.length} pers.)</span>
+              <span style="font-size: 0.7rem; color: #94a3b8;">Pagó: ${icono} ${g.payer} (${g.participants.length} pers.)</span>
               <span class="expense-amount">${formatearDinero(g.amount)}</span>
             </div>
             <div class="fixed-actions">
@@ -274,8 +317,9 @@
       let totalGeneral = 0;
       const pagadoPorPersona = {};
       const debePorPersona = {};
+      const nombresViajeros = viajeros.map(v => v.nombre);
 
-      viajeros.forEach(v => {
+      nombresViajeros.forEach(v => {
         pagadoPorPersona[v] = 0;
         debePorPersona[v] = 0;
       });
@@ -296,14 +340,14 @@
 
       totalAmountEl.innerText = formatearDinero(totalGeneral);
 
-      if (viajeros.length === 0 || totalGeneral === 0) {
+      if (nombresViajeros.length === 0 || totalGeneral === 0) {
         resultsContainer.innerHTML = '<span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá viajeros y gastos para calcular.</span>';
         if (btnWaViaje) btnWaViaje.style.display = 'none';
         return;
       }
 
       const balances = [];
-      viajeros.forEach(v => {
+      nombresViajeros.forEach(v => {
         const balance = pagadoPorPersona[v] - debePorPersona[v];
         balances.push({ nombre: v, balance: balance });
       });
@@ -339,11 +383,20 @@
         if (btnWaViaje) btnWaViaje.style.display = 'none';
       } else {
         ultimasTransaccionesViajeCalculadas.forEach(t => {
+          const acreedorObj = viajeros.find(v => v.nombre === t.a);
+          const aliasAcreedor = acreedorObj ? acreedorObj.alias : 'Sin alias';
+
           const div = document.createElement('div');
-          div.style.cssText = 'background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 0.6rem; border-radius: 0.4rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;';
+          div.style.cssText = 'background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 0.6rem; border-radius: 0.4rem; display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.75rem;';
           div.innerHTML = `
-            <span style="color: #f1f5f9;"><strong>${t.de}</strong> le debe a <strong>${t.a}</strong></span>
-            <span style="color: #34d399; font-weight: 700;">${formatearDinero(t.monto)}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #f1f5f9;"><strong>${t.de}</strong> le debe a <strong>${t.a}</strong></span>
+              <span style="color: #34d399; font-weight: 700;">${formatearDinero(t.monto)}</span>
+            </div>
+            <div style="display: flex; gap: 0.3rem; margin-top: 0.2rem;">
+              <button onclick="copiarAlias('${aliasAcreedor}')" style="flex: 1; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; padding: 0.3rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">💳 Copiar Alias (${aliasAcreedor})</button>
+              <button onclick="reclamarWhatsAppViaje('${t.de}', '${t.a}', ${t.monto})" style="background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.3rem 0.5rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">📢 Reclamar</button>
+            </div>
           `;
           resultsContainer.appendChild(div);
         });
@@ -353,7 +406,7 @@
 
     function compartirWhatsAppViaje() {
       let texto = `✈️ *RESUMEN DE VIAJE - PLATITA* ✈️\n\n`;
-      texto += `👥 *Viajeros:* ${viajeros.join(', ')}\n`;
+      texto += `👥 *Viajeros:* ${viajeros.map(v => `${v.emoji} ${v.nombre}`).join(', ')}\n`;
       texto += `💰 *Costo Total:* ${document.getElementById('total-travel-amount').innerText}\n\n`;
       texto += `📝 *Detalle de Gastos:* \n`;
 
