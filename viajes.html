@@ -42,9 +42,7 @@
           <input type="text" id="traveler-name" placeholder="Nombre (Ej: Juan, Gabi)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
           <button type="submit" class="btn-sub" style="padding: 0.4rem 0.8rem; font-size: 0.7rem;">+ Añadir</button>
         </form>
-        <div id="travelers-chips-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;">
-          <!-- Se cargan dinámicamente -->
-        </div>
+        <div id="travelers-chips-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;"></div>
       </section>
 
       <!-- Paso 2: Registrar Gasto y Seleccionar Quiénes Participan -->
@@ -60,7 +58,7 @@
             <input type="text" id="expense-travel-desc" placeholder="Concepto (Ej: Hotel, Alquiler de Auto)" required style="width: 100%;">
           </div>
           <div class="form-row" style="margin-bottom: 0.4rem;">
-            <input type="number" id="expense-travel-amount" placeholder="Monto Total ($)" required style="width: 100%;">
+            <input type="number" inputmode="numeric" id="expense-travel-amount" placeholder="Monto Total ($)" required style="width: 100%;">
           </div>
 
           <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
@@ -89,9 +87,12 @@
         </div>
 
         <h4 style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Cómo saldar cuentas:</h4>
-        <div id="travel-settlement-results" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div id="travel-settlement-results" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
           <span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá viajeros y gastos para calcular.</span>
         </div>
+
+        <!-- Botón para compartir viaje por WhatsApp -->
+        <button onclick="compartirWhatsAppViaje()" id="btn-compartir-wa-viaje" style="display: none; width: 100%; background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center;">📱 Compartir Resumen de Viaje</button>
       </section>
     </main>
   </div>
@@ -99,6 +100,14 @@
   <script>
     let viajeros = JSON.parse(localStorage.getItem('platita_viaje_viajeros')) || [];
     let gastosViaje = JSON.parse(localStorage.getItem('platita_viaje_gastos')) || [];
+    let ultimasTransaccionesViajeCalculadas = [];
+
+    function formatearDinero(monto) {
+      if (isNaN(monto) || monto === null) return '$ 0';
+      return Number(monto).toLocaleString('es-AR', {
+        style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0
+      });
+    }
 
     function cambiarPagina(urlDestino) {
       const overlay = document.getElementById('transition-overlay');
@@ -228,8 +237,8 @@
           li.innerHTML = `
             <div class="fixed-info">
               <strong>${g.desc}</strong>
-              <span style="font-size: 0.7rem; color: #94a3b8;">Pagó: ${g.payer} (${g.participants.length} participantes)</span>
-              <span class="expense-amount">$ ${g.amount}</span>
+              <span style="font-size: 0.7rem; color: #94a3b8;">Pagó: ${g.payer} (${g.participants.length} pers.)</span>
+              <span class="expense-amount">${formatearDinero(g.amount)}</span>
             </div>
             <div class="fixed-actions">
               <button class="btn-delete-fixed" onclick="eliminarGastoViaje(${g.id})">🗑️</button>
@@ -245,6 +254,7 @@
     function calcularLiquidacionViaje() {
       const totalAmountEl = document.getElementById('total-travel-amount');
       const resultsContainer = document.getElementById('travel-settlement-results');
+      const btnWaViaje = document.getElementById('btn-compartir-wa-viaje');
 
       let totalGeneral = 0;
       const pagadoPorPersona = {};
@@ -269,10 +279,11 @@
         });
       });
 
-      totalAmountEl.innerText = `$ ${totalGeneral.toLocaleString('es-AR')}`;
+      totalAmountEl.innerText = formatearDinero(totalGeneral);
 
       if (viajeros.length === 0 || totalGeneral === 0) {
         resultsContainer.innerHTML = '<span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá viajeros y gastos para calcular.</span>';
+        if (btnWaViaje) btnWaViaje.style.display = 'none';
         return;
       }
 
@@ -286,7 +297,7 @@
       let acreedores = balances.filter(b => b.balance > 1).map(b => ({ ...b }));
 
       resultsContainer.innerHTML = '';
-      let transacciones = [];
+      ultimasTransaccionesViajeCalculadas = [];
 
       let d = 0, a = 0;
       while (d < deudores.length && a < acreedores.length) {
@@ -295,7 +306,7 @@
 
         let montoABajar = Math.min(Math.abs(deudor.balance), acreedor.balance);
 
-        transacciones.push({
+        ultimasTransaccionesViajeCalculadas.push({
           de: deudor.nombre,
           a: acreedor.nombre,
           monto: Math.round(montoABajar)
@@ -308,19 +319,42 @@
         if (acreedor.balance < 1) a++;
       }
 
-      if (transacciones.length === 0) {
+      if (ultimasTransaccionesViajeCalculadas.length === 0) {
         resultsContainer.innerHTML = '<div style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0.6rem; border-radius: 0.4rem; text-align: center; font-size: 0.75rem; font-weight: 600;">✨ ¡Cuentas del viaje saldadas! Nadie le debe nada a nadie.</div>';
+        if (btnWaViaje) btnWaViaje.style.display = 'none';
       } else {
-        transacciones.forEach(t => {
+        ultimasTransaccionesViajeCalculadas.forEach(t => {
           const div = document.createElement('div');
           div.style.cssText = 'background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 0.6rem; border-radius: 0.4rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;';
           div.innerHTML = `
             <span style="color: #f1f5f9;"><strong>${t.de}</strong> le debe a <strong>${t.a}</strong></span>
-            <span style="color: #34d399; font-weight: 700;">$ ${t.monto.toLocaleString('es-AR')}</span>
+            <span style="color: #34d399; font-weight: 700;">${formatearDinero(t.monto)}</span>
           `;
           resultsContainer.appendChild(div);
         });
+        if (btnWaViaje) btnWaViaje.style.display = 'block';
       }
+    }
+
+    function compartirWhatsAppViaje() {
+      let texto = `✈️ *RESUMEN DE VIAJE - PLATITA* ✈️\n\n`;
+      texto += `👥 *Viajeros:* ${viajeros.join(', ')}\n`;
+      texto += `💰 *Costo Total:* ${document.getElementById('total-travel-amount').innerText}\n\n`;
+      texto += `📝 *Detalle de Gastos:* \n`;
+
+      gastosViaje.forEach(g => {
+        texto += `• ${g.desc}: ${formatearDinero(g.amount)} (Pagó ${g.payer} - Partic: ${g.participants.join(', ')})\n`;
+      });
+
+      texto += `\n💸 *CÓMO SALDAR CUENTAS:*\n`;
+      ultimasTransaccionesViajeCalculadas.forEach(t => {
+        texto += `👉 *${t.de}* le debe a *${t.a}* ➔ *${formatearDinero(t.monto)}*\n`;
+      });
+
+      texto += `\n✨ _Calculado con Platita App_`;
+
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+      window.open(url, '_blank');
     }
   </script>
 </body>

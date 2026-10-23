@@ -42,9 +42,7 @@
           <input type="text" id="person-name" placeholder="Nombre (Ej: Juan, Cande)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
           <button type="submit" class="btn-sub" style="padding: 0.4rem 0.8rem; font-size: 0.7rem;">+ Añadir</button>
         </form>
-        <div id="persons-chips-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;">
-          <!-- Se cargan dinámicamente -->
-        </div>
+        <div id="persons-chips-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;"></div>
       </section>
 
       <!-- Paso 2: Registrar Quien Puso Qué -->
@@ -60,12 +58,11 @@
             <input type="text" id="expense-desc" placeholder="Concepto (Ej: Asado, Super, Nafta)" required style="width: 100%;">
           </div>
           <div class="form-row" style="margin-bottom: 0.4rem;">
-            <input type="number" id="expense-amount" placeholder="Monto ($)" required style="width: 100%;">
+            <input type="number" inputmode="numeric" id="expense-amount" placeholder="Monto ($)" required style="width: 100%;">
           </div>
           <button type="submit" class="btn-sub" style="width: 100%; margin-top: 0.4rem;">Registrar Gasto</button>
         </form>
 
-        <!-- Lista de gastos cargados -->
         <ul id="expenses-list-vaquita" class="futuristic-movements" style="margin-top: 1rem;">
           <li style="text-align: center; color: #64748b; font-size: 0.75rem;">No hay gastos cargados aún.</li>
         </ul>
@@ -82,9 +79,12 @@
         </div>
 
         <h4 style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Cómo saldar cuentas:</h4>
-        <div id="settlement-results" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div id="settlement-results" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
           <span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá integrantes y gastos para calcular.</span>
         </div>
+
+        <!-- Botón para compartir por WhatsApp -->
+        <button onclick="compartirWhatsAppVaquita()" id="btn-compartir-wa" style="display: none; width: 100%; background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center;">📱 Compartir Resumen por WhatsApp</button>
       </section>
     </main>
   </div>
@@ -92,6 +92,14 @@
   <script>
     let integrantes = JSON.parse(localStorage.getItem('platita_vaquita_integrantes')) || [];
     let gastosVaquita = JSON.parse(localStorage.getItem('platita_vaquita_gastos')) || [];
+    let ultimasTransaccionesCalculadas = [];
+
+    function formatearDinero(monto) {
+      if (isNaN(monto) || monto === null) return '$ 0';
+      return Number(monto).toLocaleString('es-AR', {
+        style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0
+      });
+    }
 
     function cambiarPagina(urlDestino) {
       const overlay = document.getElementById('transition-overlay');
@@ -196,7 +204,7 @@
             <div class="fixed-info">
               <strong>${g.desc}</strong>
               <span style="font-size: 0.7rem; color: #94a3b8;">Pagó: ${g.payer}</span>
-              <span class="expense-amount">$ ${g.amount}</span>
+              <span class="expense-amount">${formatearDinero(g.amount)}</span>
             </div>
             <div class="fixed-actions">
               <button class="btn-delete-fixed" onclick="eliminarGasto(${g.id})">🗑️</button>
@@ -212,6 +220,7 @@
     function calcularLiquidacion() {
       const totalAmountEl = document.getElementById('total-vaquita-amount');
       const resultsContainer = document.getElementById('settlement-results');
+      const btnWa = document.getElementById('btn-compartir-wa');
 
       let totalGeneral = 0;
       const pagadoPorPersona = {};
@@ -224,13 +233,84 @@
         }
       });
 
-      totalAmountEl.innerText = `$ ${totalGeneral.toLocaleString('es-AR')}`;
+      totalAmountEl.innerText = formatearDinero(totalGeneral);
 
       if (integrantes.length === 0 || totalGeneral === 0) {
         resultsContainer.innerHTML = '<span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá integrantes y gastos para calcular.</span>';
+        if (btnWa) btnWa.style.display = 'none';
         return;
       }
 
       const cuotaParte = totalGeneral / integrantes.length;
       const balances = [];
-      integrantes.forEach(p =>
+      integrantes.forEach(p => {
+        const balance = pagadoPorPersona[p] - cuotaParte;
+        balances.push({ nombre: p, balance: balance });
+      });
+
+      let deudores = balances.filter(b => b.balance < -1).map(b => ({ ...b }));
+      let acreedores = balances.filter(b => b.balance > 1).map(b => ({ ...b }));
+
+      resultsContainer.innerHTML = '';
+      ultimasTransaccionesCalculadas = [];
+
+      let d = 0, a = 0;
+      while (d < deudores.length && a < acreedores.length) {
+        let deudor = deudores[d];
+        let acreedor = acreedores[a];
+
+        let montoABajar = Math.min(Math.abs(deudor.balance), acreedor.balance);
+
+        ultimasTransaccionesCalculadas.push({
+          de: deudor.nombre,
+          a: acreedor.nombre,
+          monto: Math.round(montoABajar)
+        });
+
+        deudor.balance += montoABajar;
+        acreedor.balance -= montoABajar;
+
+        if (Math.abs(deudor.balance) < 1) d++;
+        if (acreedor.balance < 1) a++;
+      }
+
+      if (ultimasTransaccionesCalculadas.length === 0) {
+        resultsContainer.innerHTML = '<div style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0.6rem; border-radius: 0.4rem; text-align: center; font-size: 0.75rem; font-weight: 600;">✨ ¡Cuentas saldadas! Nadie le debe nada a nadie.</div>';
+        if (btnWa) btnWa.style.display = 'none';
+      } else {
+        ultimasTransaccionesCalculadas.forEach(t => {
+          const div = document.createElement('div');
+          div.style.cssText = 'background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 0.6rem; border-radius: 0.4rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;';
+          div.innerHTML = `
+            <span style="color: #f1f5f9;"><strong>${t.de}</strong> le debe a <strong>${t.a}</strong></span>
+            <span style="color: #34d399; font-weight: 700;">${formatearDinero(t.monto)}</span>
+          `;
+          resultsContainer.appendChild(div);
+        });
+        if (btnWa) btnWa.style.display = 'block';
+      }
+    }
+
+    function compartirWhatsAppVaquita() {
+      let texto = `📊 *RESUMEN DE VAQUITA - PLATITA* 📊\n\n`;
+      texto += `👥 *Integrantes:* ${integrantes.join(', ')}\n`;
+      texto += `💰 *Gasto Total:* ${document.getElementById('total-vaquita-amount').innerText}\n\n`;
+      texto += `📝 *Detalle de Gastos:* \n`;
+      
+      gastosVaquita.forEach(g => {
+        texto += `• ${g.desc}: ${formatearDinero(g.amount)} (Pagó ${g.payer})\n`;
+      });
+
+      texto += `\n💸 *CÓMO SALDAR CUENTAS:*\n`;
+      ultimasTransaccionesCalculadas.forEach(t => {
+        texto += `👉 *${t.de}* le debe a *${t.a}* ➔ *${formatearDinero(t.monto)}*\n`;
+      });
+
+      texto += `\n✨ _Calculado con Platita App_`;
+
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+      window.open(url, '_blank');
+    }
+  </script>
+</body>
+</html>
