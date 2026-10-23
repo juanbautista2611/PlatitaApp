@@ -218,3 +218,24 @@ window.deleteFixed = async function(id) {
     cargarDatosGenerales();
   }
 };
+
+// Función global para cambiar de página con transición fluida
+function cambiarPagina(urlDestino) {
+  const overlay = document.getElementById('transition-overlay');
+  if (overlay) {
+    overlay.classList.add('active'); // Muestra la cortina negra con el spinner
+  }
+  
+  // Espera exactamente 2 segundos antes de redirigir
+  setTimeout(() => {
+    window.location.href = urlDestino;
+  }, 2000);
+}
+
+// Opcional: Efecto de entrada suave cuando la página termina de cargar
+window.addEventListener('pageshow', () => {
+  const overlay = document.getElementById('transition-overlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
+});
