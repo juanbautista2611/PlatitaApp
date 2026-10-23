@@ -10,7 +10,7 @@
 </head>
 <body>
 
-  <!-- Pantalla de carga / Transición -->
+  <!-- Pantalla de carga / Transition -->
   <div id="transition-overlay" class="page-transition-overlay">
     <div class="loader-spinner"></div>
     <span class="loader-text">Cargando Platita...</span>
@@ -21,17 +21,17 @@
       <!-- Header Superior -->
       <header class="top-header">
         <div class="header-top-row">
-          <h1 class="logo-title">Platita</h1>
+          <h1 class="logo-title">Platita 💰</h1>
           <div class="header-right">
             <span id="current-date-badge" class="date-badge">Cargando...</span>
-            <a href="#" onclick="cambiarPagina('perfil.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Perfil</a>
-            <button id="logout-btn" title="Cerrar Sesión" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; cursor: pointer;">Salir</button>
+            <a href="#" onclick="cambiarPagina('perfil.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; text-decoration: none;">Perfil</a>
+            <button id="logout-btn" title="Cerrar Sesión" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Salir</button>
           </div>
         </div>
-        <div class="welcome-block" style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div class="welcome-block" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem;">
           <div>
             <span class="greeting-sub" id="user-greeting-sub">Hola,</span>
-            <h2>Así va tu platita</h2>
+            <h2 style="font-size: 1.25rem;">Tu Resumen Financiero</h2>
           </div>
           <!-- Selector de Mes / Historial -->
           <div>
@@ -41,165 +41,82 @@
         </div>
       </header>
 
+      <!-- Botón Flotante / Destacado para Ir a Cargar y Gestionar -->
+      <section style="margin-bottom: 1.25rem;">
+        <button onclick="cambiarPagina('gestion.html'); return false;" style="width: 100%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: none; color: #ffffff; padding: 0.85rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+          <span>➕ Ir a Cargar Gastos, Ingresos y Fijos</span>
+        </button>
+      </section>
+
       <!-- Alertas de Vencimientos Próximos -->
       <section id="alerts-widget-section" class="card" style="margin-bottom: 1.25rem; display: none; border-left: 3px solid #f87171; background: rgba(239, 68, 68, 0.05);">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
           <span style="font-size: 1rem;">⚠️</span>
-          <h3 style="font-size: 0.78rem; font-weight: 700; color: #f87171; text-transform: uppercase; letter-spacing: 0.04em;">Vencimientos Cercanos</h3>
+          <h3 style="font-size: 0.8rem; font-weight: 700; color: #f87171; text-transform: uppercase;">Vencimientos Cercanos</h3>
         </div>
-        <div id="alerts-container" style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.73rem; color: #cbd5e1;"></div>
+        <div id="alerts-container" style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.78rem; color: #cbd5e1;"></div>
       </section>
 
-      <!-- Saldo Actual -->
-      <section class="card balance-main-card">
+      <!-- Saldo Actual (Letras Grandes) -->
+      <section class="card balance-main-card" style="padding: 1.5rem 1.25rem;">
         <div class="card-top">
           <div class="card-icon-box">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-            <span>Saldo del mes seleccionado</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <span style="font-size: 0.8rem; font-weight: 600;">Saldo Neto Disponible</span>
           </div>
         </div>
-        <div class="balance-amount" id="current-balance">$ 0</div>
+        <div class="balance-amount" id="current-balance" style="font-size: 2.4rem; font-weight: 800; margin: 0.5rem 0; color: #38bdf8;">$ 0</div>
         <div class="balance-footer">
-          <span class="trend-indicator">Disponible neto real</span>
+          <span class="trend-indicator" style="font-size: 0.75rem;">Balance real del mes seleccionado</span>
         </div>
       </section>
 
-      <!-- Métricas -->
-      <div class="metrics-grid">
-        <div class="card metric-card">
-          <span class="metric-title">Ingresos del mes</span>
-          <div class="metric-amount" id="monthly-income">$ 0</div>
-        </div>
-        <div class="card metric-card">
-          <span class="metric-title">Gastos del mes</span>
-          <div class="metric-amount" id="monthly-expenses">$ 0</div>
-        </div>
-      </div>
-
-      <!-- Objetivo y Disponible -->
+      <!-- Métricas (Ingresos y Gastos Grandes) -->
       <div class="metrics-grid" style="margin-bottom: 1.25rem;">
-        <div class="card metric-card">
-          <span class="metric-title" id="goal-title-display">Ahorro objetivo</span>
-          <div class="metric-amount" id="goal-amount-display" style="font-size: 1.15rem;">$ 0</div>
-          <div class="mini-progress"><div id="goal-progress-fill" class="fill goal" style="width: 0%;"></div></div>
+        <div class="card metric-card" style="padding: 1rem;">
+          <span class="metric-title" style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">📥 Ingresos del mes</span>
+          <div class="metric-amount" id="monthly-income" style="font-size: 1.3rem; font-weight: 700; color: #34d399; margin-top: 0.3rem;">$ 0</div>
         </div>
-        <div class="card metric-card">
-          <span class="metric-title">Disponible libre</span>
-          <div class="metric-amount" id="free-disposable">$ 0</div>
+        <div class="card metric-card" style="padding: 1rem;">
+          <span class="metric-title" style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">📤 Gastos del mes</span>
+          <div class="metric-amount" id="monthly-expenses" style="font-size: 1.3rem; font-weight: 700; color: #f87171; margin-top: 0.3rem;">$ 0</div>
         </div>
       </div>
 
-      <!-- Gráfico de Gastos por Categoría y Presupuestos -->
-      <section class="card" style="margin-bottom: 1.25rem;">
-        <h3 style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Gastos por Categoría</h3>
-        <div style="position: relative; width: 100%; max-width: 240px; margin: 0 auto 0.75rem auto;">
+      <!-- Objetivo de Ahorro -->
+      <div class="card" style="margin-bottom: 1.25rem; padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <span id="goal-title-display" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Ahorro objetivo</span>
+          <span id="goal-amount-display" style="font-size: 0.95rem; font-weight: 700; color: #38bdf8;">$ 0</span>
+        </div>
+        <div class="mini-progress" style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden;"><div id="goal-progress-fill" class="fill goal" style="width: 0%; height: 100%; background: #38bdf8; transition: width 0.5s;"></div></div>
+      </div>
+
+      <!-- Gráfico de Gastos por Categoría -->
+      <section class="card" style="margin-bottom: 1.25rem; padding: 1.25rem;">
+        <h3 style="font-size: 0.85rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase;">📊 Gastos por Categoría</h3>
+        <div style="position: relative; width: 100%; max-width: 260px; margin: 0 auto 1rem auto;">
           <canvas id="mainCategoriesChart"></canvas>
         </div>
-        <div id="category-budgets-status" style="font-size: 0.72rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;"></div>
+        <div id="category-budgets-status" style="font-size: 0.78rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;"></div>
       </section>
 
-      <!-- Gráfico de Evolución de Gastos Diarios -->
-      <section class="card" style="margin-bottom: 1.25rem;">
-        <h3 style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Evolución Diaria de Gastos</h3>
-        <div style="position: relative; width: 100%; height: 180px; margin: 0 auto;">
+      <!-- Gráfico de Evolución Diaria -->
+      <section class="card" style="margin-bottom: 1.25rem; padding: 1.25rem;">
+        <h3 style="font-size: 0.85rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase;">📈 Evolución Diaria de Gastos</h3>
+        <div style="position: relative; width: 100%; height: 200px; margin: 0 auto;">
           <canvas id="dailyTrendChart"></canvas>
         </div>
       </section>
 
-      <!-- Registrar Operación -->
-      <section class="card form-container-card">
-        <h3>Registrar Operación</h3>
-        <form id="transaction-form" class="futuristic-form">
-          <div class="form-row">
-            <select id="tx-type">
-              <option value="expense">Gasto</option>
-              <option value="income">Ingreso</option>
-            </select>
-            <select id="tx-category" required>
-              <option value="">Seleccioná categoría...</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <input type="text" inputmode="numeric" id="tx-amount" placeholder="$ 50.000" required oninput="formatearInputMoneda(this)">
-            <input type="date" id="tx-date" required>
-          </div>
-          <button type="submit" class="btn-futuristic">Registrar Movimiento</button>
-        </form>
-
-        <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;">
-          <form id="category-form" style="display: flex; gap: 0.4rem;">
-            <input type="text" id="new-cat-name" placeholder="Nueva categoría (Ej: Super)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
-            <button type="submit" class="btn-sub" style="padding: 0.4rem 0.8rem; font-size: 0.7rem;">+ Crear</button>
-          </form>
-        </div>
-      </section>
-
-      <!-- Definir Presupuesto Máximo por Categoría -->
-      <section class="card section-box" style="margin-bottom: 1.25rem;">
-        <div class="section-title-row">
-          <h3>Presupuesto por Categoría</h3>
-        </div>
-        <form id="budget-form" class="mini-fixed-form">
-          <select id="budget-category" required style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem; width: 100%; margin-bottom: 0.4rem;">
-            <option value="">Seleccionar categoría de gasto...</option>
-          </select>
-          <input type="text" inputmode="numeric" id="budget-max" placeholder="$ 50.000" required oninput="formatearInputMoneda(this)">
-          <button type="submit" class="btn-sub" style="margin-top: 0.4rem;">Fijar Límite</button>
-        </form>
-      </section>
-
-      <!-- Compromisos Fijos -->
-      <section class="card section-box" style="margin-bottom: 1.25rem;">
-        <div class="section-title-row">
-          <h3>Compromisos Fijos</h3>
-        </div>
-        <form id="fixed-form" class="mini-fixed-form">
-          <input type="text" id="fx-name" placeholder="Nombre (Ej: Gimnasio)" required>
-          <input type="text" inputmode="numeric" id="fx-amount" placeholder="$ 50.000" required oninput="formatearInputMoneda(this)">
-          <button type="submit" class="btn-sub">Añadir Gasto Fijo</button>
-        </form>
-        <ul id="fixed-list" class="futuristic-list">
-          <li>Cargando compromisos...</li>
-        </ul>
-      </section>
-
-      <!-- Meta de Ahorro -->
-      <section class="card section-box" style="margin-bottom: 1.25rem;">
-        <div class="section-title-row">
-          <h3>Meta de Ahorro</h3>
-        </div>
-        <form id="goal-form" class="mini-fixed-form" style="margin-bottom: 0.75rem;">
-          <input type="text" id="goal-title" placeholder="Proyecto (Ej: Viaje)" required>
-          <div style="display:flex; gap:0.4rem;">
-            <input type="text" inputmode="numeric" id="goal-target" placeholder="Meta ($)" required oninput="formatearInputMoneda(this)">
-            <input type="text" inputmode="numeric" id="goal-current" placeholder="Actual ($)" required oninput="formatearInputMoneda(this)">
-          </div>
-          <button type="submit" class="btn-sub">Definir / Reiniciar Meta</button>
-        </form>
-
-        <form id="aportar-ahorro-form" style="display: flex; gap: 0.4rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;">
-          <input type="text" inputmode="numeric" id="aporte-amount" placeholder="$ 50.000" required oninput="formatearInputMoneda(this)" style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
-          <button type="submit" class="btn-sub" style="background: #34d399; color: #05070b; padding: 0.4rem 0.8rem; font-size: 0.7rem; font-weight: 700;">+ Ya ahorré</button>
-        </form>
-      </section>
-
       <!-- Últimos Movimientos -->
-      <section class="card section-box" style="margin-bottom: 1.25rem;">
+      <section class="card section-box" style="margin-bottom: 2rem; padding: 1.25rem;">
         <div class="section-title-row">
-          <h3>Movimientos del Período</h3>
+          <h3 style="font-size: 0.85rem; color: #fff; text-transform: uppercase;">📋 Movimientos del Período</h3>
         </div>
-        <ul id="movements-list" class="futuristic-movements">
+        <ul id="movements-list" class="futuristic-movements" style="margin-top: 0.75rem;">
           <li>Cargando movimientos...</li>
         </ul>
-      </section>
-
-      <!-- Footer con Herramientas de Vaquita y Viajes -->
-      <section class="card" style="margin-bottom: 2rem; text-align: center;">
-        <h3 style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em;">Herramientas y Divisorias</h3>
-        <div style="display: flex; gap: 0.5rem;">
-          <button onclick="cambiarPagina('calculadora.html'); return false;" class="btn-sub" style="flex: 1; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.6rem; font-size: 0.72rem; font-weight: 600;">🧮 Vaquita / Amigos</button>
-          <button onclick="cambiarPagina('viajes.html'); return false;" class="btn-sub" style="flex: 1; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0.6rem; font-size: 0.72rem; font-weight: 600;">✈️ Modo Viaje</button>
-        </div>
       </section>
     </main>
   </div>
