@@ -157,6 +157,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+  // Aportar a la Meta de Ahorro (Este mes ya ahorré)
+  const aportarAhorroForm = document.getElementById('aportar-ahorro-form');
+  if (aportarAhorroForm) {
+    aportarAhorroForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const montoAporte = parseFloat(document.getElementById('aporte-amount').value);
+
+      if (isNaN(montoAporte) || montoAporte <= 0) {
+        alert('Ingresá un monto válido.');
+        return;
+      }
+
+      // Traer la meta actual de Supabase
+      const { data: goals, error: fetchError } = await supabaseClient.from('goals').select('*');
+      if (fetchError || !goals || goals.length === 0) {
+        alert('Primero debés definir una meta de ahorro arriba.');
+        return;
+      }
+
+      const goal = goals[0];
+      const nuevoMontoActual = Number(goal.current_amount) + Math.round(montoAporte);
+
+      // Actualizar en Supabase
+      const { error: updateError } = await supabaseClient
+        .from('goals')
+        .update({ current_amount: nuevoMontoActual })
+        .eq('id', goal.id);
+
+      if (updateError) {
+        alert('Error al actualizar el ahorro: ' + updateError.message);
+      } else {
+        aportarAhorroForm.reset();
+        alert(`¡Excelente! Se sumaron $${Math.round(montoAporte)} a tu ahorro.`);
+        cargarDatosGenerales();
+      }
+    });
+  }
+
+
 });
 
 async function cargarCategorias() {
