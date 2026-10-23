@@ -30,6 +30,11 @@
         </div>
       </header>
 
+      <!-- Botón de Limpiar Datos -->
+      <section style="margin-bottom: 1rem; text-align: right;">
+        <button onclick="limpiarDatosVaquita()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.4rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">🗑️ Limpiar Vaquita</button>
+      </section>
+
       <!-- Paso 1: Agregar Participantes -->
       <section class="card form-container-card" style="margin-bottom: 1.25rem;">
         <h3>1. Integrantes del Grupo</h3>
@@ -85,8 +90,8 @@
   </div>
 
   <script>
-    let integrantes = [];
-    let gastosVaquita = [];
+    let integrantes = JSON.parse(localStorage.getItem('platita_vaquita_integrantes')) || [];
+    let gastosVaquita = JSON.parse(localStorage.getItem('platita_vaquita_gastos')) || [];
 
     function cambiarPagina(urlDestino) {
       const overlay = document.getElementById('transition-overlay');
@@ -100,7 +105,8 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Agregar Persona
+      actualizarInterfaz();
+
       const personForm = document.getElementById('add-person-form');
       personForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -109,11 +115,10 @@
         if (nombre && !integrantes.includes(nombre)) {
           integrantes.push(nombre);
           input.value = '';
-          actualizarInterfaz();
+          guardarYActualizar();
         }
       });
 
-      // Agregar Gasto
       const expenseForm = document.getElementById('add-expense-form');
       expenseForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -125,23 +130,38 @@
 
         gastosVaquita.push({ id: Date.now(), payer, desc, amount: Math.round(amount) });
         expenseForm.reset();
-        actualizarInterfaz();
+        guardarYActualizar();
       });
     });
+
+    function guardarYActualizar() {
+      localStorage.setItem('platita_vaquita_integrantes', JSON.stringify(integrantes));
+      localStorage.setItem('platita_vaquita_gastos', JSON.stringify(gastosVaquita));
+      actualizarInterfaz();
+    }
+
+    function limpiarDatosVaquita() {
+      if (confirm('¿Estás seguro de borrar todos los datos de esta vaquita?')) {
+        integrantes = [];
+        gastosVaquita = [];
+        localStorage.removeItem('platita_vaquita_integrantes');
+        localStorage.removeItem('platita_vaquita_gastos');
+        actualizarInterfaz();
+      }
+    }
 
     function eliminarPersona(nombre) {
       integrantes = integrantes.filter(p => p !== nombre);
       gastosVaquita = gastosVaquita.filter(g => g.payer !== nombre);
-      actualizarInterfaz();
+      guardarYActualizar();
     }
 
     function eliminarGasto(id) {
       gastosVaquita = gastosVaquita.filter(g => g.id !== id);
-      actualizarInterfaz();
+      guardarYActualizar();
     }
 
     function actualizarInterfaz() {
-      // 1. Chips de Integrantes
       const chipsContainer = document.getElementById('persons-chips-container');
       const selectPayer = document.getElementById('expense-payer');
       
@@ -153,20 +173,17 @@
       }
 
       integrantes.forEach(p => {
-        // Chip visual
         const chip = document.createElement('div');
         chip.style.cssText = 'background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem; display: flex; align-items: center; gap: 0.4rem;';
         chip.innerHTML = `${p} <span style="cursor: pointer; font-weight: bold; color: #f87171;" onclick="eliminarPersona('${p}')">×</span>`;
         chipsContainer.appendChild(chip);
 
-        // Option en el select
         const opt = document.createElement('option');
         opt.value = p;
         opt.innerText = p;
         selectPayer.appendChild(opt);
       });
 
-      // 2. Lista de Gastos
       const expensesListUl = document.getElementById('expenses-list-vaquita');
       expensesListUl.innerHTML = '';
       if (gastosVaquita.length === 0) {
@@ -189,7 +206,6 @@
         });
       }
 
-      // 3. Calcular Totales y Liquidación de Deudas
       calcularLiquidacion();
     }
 
@@ -216,56 +232,5 @@
       }
 
       const cuotaParte = totalGeneral / integrantes.length;
-
-      // Balance de cada uno (cuánto puso menos cuánto le toca consumir)
       const balances = [];
-      integrantes.forEach(p => {
-        const balance = pagadoPorPersona[p] - cuotaParte;
-        balances.push({ nombre: p, balance: balance });
-      });
-
-      // Separar deudores (balance negativo) y acreedores (balance positivo)
-      let deudores = balances.filter(b => b.balance < -1).map(b => ({ ...b }));
-      let acreedores = balances.filter(b => b.balance > 1).map(b => ({ ...b }));
-
-      resultsContainer.innerHTML = '';
-      let transacciones = [];
-
-      // Algoritmo de apareamiento de deudas
-      let d = 0, a = 0;
-      while (d < deudores.length && a < acreedores.length) {
-        let deudor = deudores[d];
-        let acreedor = acreedores[a];
-
-        let montoABajar = Math.min(Math.abs(deudor.balance), acreedor.balance);
-
-        transacciones.push({
-          de: deudor.nombre,
-          a: acreedor.nombre,
-          monto: Math.round(montoABajar)
-        });
-
-        deudor.balance += montoABajar;
-        acreedor.balance -= montoABajar;
-
-        if (Math.abs(deudor.balance) < 1) d++;
-        if (acreedor.balance < 1) a++;
-      }
-
-      if (transacciones.length === 0) {
-        resultsContainer.innerHTML = '<div style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0.6rem; border-radius: 0.4rem; text-align: center; font-size: 0.75rem; font-weight: 600;">✨ ¡Cuentas saldadas! Nadie le debe nada a nadie.</div>';
-      } else {
-        transacciones.forEach(t => {
-          const div = document.createElement('div');
-          div.style.cssText = 'background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 0.6rem; border-radius: 0.4rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;';
-          div.innerHTML = `
-            <span style="color: #f1f5f9;"><strong>${t.de}</strong> le debe a <strong>${t.a}</strong></span>
-            <span style="color: #34d399; font-weight: 700;">$ ${t.monto.toLocaleString('es-AR')}</span>
-          `;
-          resultsContainer.appendChild(div);
-        });
-      }
-    }
-  </script>
-</body>
-</html>
+      integrantes.forEach(p =>

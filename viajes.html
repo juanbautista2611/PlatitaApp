@@ -30,6 +30,11 @@
         </div>
       </header>
 
+      <!-- Botón de Limpiar Datos de Viaje -->
+      <section style="margin-bottom: 1rem; text-align: right;">
+        <button onclick="limpiarDatosViaje()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.4rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">🗑️ Limpiar Viaje</button>
+      </section>
+
       <!-- Paso 1: Integrantes del Viaje -->
       <section class="card form-container-card" style="margin-bottom: 1.25rem;">
         <h3>1. Viajeros del Grupo</h3>
@@ -58,7 +63,6 @@
             <input type="number" id="expense-travel-amount" placeholder="Monto Total ($)" required style="width: 100%;">
           </div>
 
-          <!-- Selección de participantes para este gasto -->
           <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
             <label style="font-size: 0.65rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">¿Quiénes consumen o participan de este gasto?</label>
             <div id="participants-checkboxes" style="display: flex; flex-wrap: wrap; gap: 0.5rem; background: rgba(15, 23, 42, 0.5); padding: 0.5rem; border-radius: 0.4rem; border: 1px solid #334155;">
@@ -69,7 +73,6 @@
           <button type="submit" class="btn-sub" style="width: 100%; margin-top: 0.4rem;">Registrar Gasto de Viaje</button>
         </form>
 
-        <!-- Lista de gastos de viaje -->
         <ul id="travel-expenses-list" class="futuristic-movements" style="margin-top: 1rem;">
           <li style="text-align: center; color: #64748b; font-size: 0.75rem;">No hay gastos de viaje cargados.</li>
         </ul>
@@ -94,8 +97,8 @@
   </div>
 
   <script>
-    let viajeros = [];
-    let gastosViaje = [];
+    let viajeros = JSON.parse(localStorage.getItem('platita_viaje_viajeros')) || [];
+    let gastosViaje = JSON.parse(localStorage.getItem('platita_viaje_gastos')) || [];
 
     function cambiarPagina(urlDestino) {
       const overlay = document.getElementById('transition-overlay');
@@ -109,7 +112,8 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Agregar Viajero
+      actualizarInterfazViaje();
+
       const travelerForm = document.getElementById('add-traveler-form');
       travelerForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -118,11 +122,10 @@
         if (nombre && !viajeros.includes(nombre)) {
           viajeros.push(nombre);
           input.value = '';
-          actualizarInterfazViaje();
+          guardarYActualizarViaje();
         }
       });
 
-      // Agregar Gasto de Viaje
       const expenseForm = document.getElementById('add-travel-expense-form');
       expenseForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -130,7 +133,6 @@
         const desc = document.getElementById('expense-travel-desc').value.trim();
         const amount = parseFloat(document.getElementById('expense-travel-amount').value);
 
-        // Recolectar checkboxes seleccionados
         const checkboxes = document.querySelectorAll('.participant-chk:checked');
         const participants = Array.from(checkboxes).map(chk => chk.value);
 
@@ -149,11 +151,26 @@
         });
 
         expenseForm.reset();
-        // Volver a marcar todos por defecto al resetear
         document.querySelectorAll('.participant-chk').forEach(c => c.checked = true);
-        actualizarInterfazViaje();
+        guardarYActualizarViaje();
       });
     });
+
+    function guardarYActualizarViaje() {
+      localStorage.setItem('platita_viaje_viajeros', JSON.stringify(viajeros));
+      localStorage.setItem('platita_viaje_gastos', JSON.stringify(gastosViaje));
+      actualizarInterfazViaje();
+    }
+
+    function limpiarDatosViaje() {
+      if (confirm('¿Estás seguro de borrar todos los datos y gastos de este viaje?')) {
+        viajeros = [];
+        gastosViaje = [];
+        localStorage.removeItem('platita_viaje_viajeros');
+        localStorage.removeItem('platita_viaje_gastos');
+        actualizarInterfazViaje();
+      }
+    }
 
     function eliminarViajero(nombre) {
       viajeros = viajeros.filter(v => v !== nombre);
@@ -161,12 +178,12 @@
       gastosViaje.forEach(g => {
         g.participants = g.participants.filter(p => p !== nombre);
       });
-      actualizarInterfazViaje();
+      guardarYActualizarViaje();
     }
 
     function eliminarGastoViaje(id) {
       gastosViaje = gastosViaje.filter(g => g.id !== id);
-      actualizarInterfazViaje();
+      guardarYActualizarViaje();
     }
 
     function actualizarInterfazViaje() {
@@ -184,26 +201,22 @@
       }
 
       viajeros.forEach(v => {
-        // Chip visual
         const chip = document.createElement('div');
         chip.style.cssText = 'background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem; display: flex; align-items: center; gap: 0.4rem;';
         chip.innerHTML = `${v} <span style="cursor: pointer; font-weight: bold; color: #f87171;" onclick="eliminarViajero('${v}')">×</span>`;
         chipsContainer.appendChild(chip);
 
-        // Option de pagador
         const opt = document.createElement('option');
         opt.value = v;
         opt.innerText = v;
         selectPayer.appendChild(opt);
 
-        // Checkbox de participante
         const label = document.createElement('label');
         label.style.cssText = 'font-size: 0.7rem; color: #f1f5f9; display: flex; align-items: center; gap: 0.3rem; cursor: pointer;';
         label.innerHTML = `<input type="checkbox" class="participant-chk" value="${v}" checked style="accent-color: #3b82f6;"> ${v}`;
         checkboxesContainer.appendChild(label);
       });
 
-      // Lista de Gastos
       const expensesListUl = document.getElementById('travel-expenses-list');
       expensesListUl.innerHTML = '';
       if (gastosViaje.length === 0) {
@@ -248,7 +261,6 @@
           pagadoPorPersona[g.payer] += g.amount;
         }
 
-        // Dividir el gasto solo entre los participantes seleccionados
         const cuotaParte = g.amount / g.participants.length;
         g.participants.forEach(p => {
           if (debePorPersona[p] !== undefined) {
@@ -264,7 +276,6 @@
         return;
       }
 
-      // Balance = Cuánto pagó menos Cuánto debe consumir
       const balances = [];
       viajeros.forEach(v => {
         const balance = pagadoPorPersona[v] - debePorPersona[v];
