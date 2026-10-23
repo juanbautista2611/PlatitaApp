@@ -58,7 +58,7 @@
             <input type="text" id="expense-travel-desc" placeholder="Concepto (Ej: Hotel, Alquiler de Auto)" required style="width: 100%;">
           </div>
           <div class="form-row" style="margin-bottom: 0.4rem;">
-            <input type="number" inputmode="numeric" id="expense-travel-amount" placeholder="Monto Total ($)" required style="width: 100%;">
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="expense-travel-amount" placeholder="Monto Total ($)" required style="width: 100%;">
           </div>
 
           <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
@@ -91,7 +91,6 @@
           <span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá viajeros y gastos para calcular.</span>
         </div>
 
-        <!-- Botón para compartir viaje por WhatsApp -->
         <button onclick="compartirWhatsAppViaje()" id="btn-compartir-wa-viaje" style="display: none; width: 100%; background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center;">📱 Compartir Resumen de Viaje</button>
       </section>
     </main>

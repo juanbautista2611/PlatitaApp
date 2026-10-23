@@ -58,7 +58,7 @@
             <input type="text" id="expense-desc" placeholder="Concepto (Ej: Asado, Super, Nafta)" required style="width: 100%;">
           </div>
           <div class="form-row" style="margin-bottom: 0.4rem;">
-            <input type="number" inputmode="numeric" id="expense-amount" placeholder="Monto ($)" required style="width: 100%;">
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="expense-amount" placeholder="Monto ($)" required style="width: 100%;">
           </div>
           <button type="submit" class="btn-sub" style="width: 100%; margin-top: 0.4rem;">Registrar Gasto</button>
         </form>
@@ -83,7 +83,6 @@
           <span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá integrantes y gastos para calcular.</span>
         </div>
 
-        <!-- Botón para compartir por WhatsApp -->
         <button onclick="compartirWhatsAppVaquita()" id="btn-compartir-wa" style="display: none; width: 100%; background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center;">📱 Compartir Resumen por WhatsApp</button>
       </section>
     </main>

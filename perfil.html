@@ -55,7 +55,7 @@
         <form id="calendar-form" class="mini-fixed-form" style="margin-bottom: 1rem;">
           <input type="text" id="cal-title" placeholder="Concepto (Ej: Alquiler, Luz)" required>
           <div style="display: flex; gap: 0.4rem;">
-            <input type="number" id="cal-amount" placeholder="Monto ($)" required>
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="cal-amount" placeholder="Monto ($)" required>
             <input type="date" id="cal-date" required>
           </div>
           <button type="submit" class="btn-sub" style="margin-top: 0.4rem;">Añadir Recordatorio</button>
@@ -92,6 +92,13 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let myChart = null;
+
+    function formatearDinero(monto) {
+      if (isNaN(monto) || monto === null) return '$ 0';
+      return Number(monto).toLocaleString('es-AR', {
+        style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0
+      });
+    }
 
     function cambiarPagina(urlDestino) {
       const overlay = document.getElementById('transition-overlay');
@@ -145,7 +152,6 @@
         });
       }
 
-      // Lógica de Reiniciar Mes en Perfil
       const resetBtn = document.getElementById('reset-month-btn');
       if (resetBtn) {
         resetBtn.addEventListener('click', async () => {
@@ -177,7 +183,7 @@
           <div class="fixed-info">
             <strong>${ev.title}</strong>
             <span style="font-size: 0.7rem; color: #94a3b8;">Vence: ${ev.due_date}</span>
-            <span class="${ev.status === 'paid' ? 'expense-amount-green' : 'expense-amount-red'}">$ ${ev.amount}</span>
+            <span class="${ev.status === 'paid' ? 'expense-amount-green' : 'expense-amount-red'}">${formatearDinero(ev.amount)}</span>
           </div>
           <div class="fixed-actions">
             <button class="${ev.status === 'pending' ? 'badge-pending' : 'badge-paid'}" onclick="toggleCalendarEvent(${ev.id}, '${ev.status}')">

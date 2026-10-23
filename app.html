@@ -41,7 +41,7 @@
         </div>
       </header>
 
-      <!-- Alertas de Vencimientos Próximos (Nuevo) -->
+      <!-- Alertas de Vencimientos Próximos -->
       <section id="alerts-widget-section" class="card" style="margin-bottom: 1.25rem; display: none; border-left: 3px solid #f87171; background: rgba(239, 68, 68, 0.05);">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
           <span style="font-size: 1rem;">⚠️</span>
@@ -98,7 +98,7 @@
         <div id="category-budgets-status" style="font-size: 0.72rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;"></div>
       </section>
 
-      <!-- Gráfico de Evolución de Gastos Diarios (Nuevo) -->
+      <!-- Gráfico de Evolución de Gastos Diarios -->
       <section class="card" style="margin-bottom: 1.25rem;">
         <h3 style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Evolución Diaria de Gastos</h3>
         <div style="position: relative; width: 100%; height: 180px; margin: 0 auto;">
@@ -106,7 +106,7 @@
         </div>
       </section>
 
-      <!-- Registrar Operación con Categorías Personalizadas -->
+      <!-- Registrar Operación -->
       <section class="card form-container-card">
         <h3>Registrar Operación</h3>
         <form id="transaction-form" class="futuristic-form">
@@ -120,13 +120,12 @@
             </select>
           </div>
           <div class="form-row">
-            <input type="number" id="tx-amount" placeholder="Monto ($)" required>
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="tx-amount" placeholder="Monto ($)" required>
             <input type="date" id="tx-date" required>
           </div>
           <button type="submit" class="btn-futuristic">Registrar Movimiento</button>
         </form>
 
-        <!-- Crear nueva categoría rápida -->
         <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;">
           <form id="category-form" style="display: flex; gap: 0.4rem;">
             <input type="text" id="new-cat-name" placeholder="Nueva categoría (Ej: Super)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
@@ -144,7 +143,7 @@
           <select id="budget-category" required style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem; width: 100%; margin-bottom: 0.4rem;">
             <option value="">Seleccionar categoría de gasto...</option>
           </select>
-          <input type="number" id="budget-max" placeholder="Tope máximo ($)" required>
+          <input type="number" inputmode="numeric" pattern="[0-9]*" id="budget-max" placeholder="Tope máximo ($)" required>
           <button type="submit" class="btn-sub" style="margin-top: 0.4rem;">Fijar Límite</button>
         </form>
       </section>
@@ -156,7 +155,7 @@
         </div>
         <form id="fixed-form" class="mini-fixed-form">
           <input type="text" id="fx-name" placeholder="Nombre (Ej: Gimnasio)" required>
-          <input type="number" id="fx-amount" placeholder="Monto ($)" required>
+          <input type="number" inputmode="numeric" pattern="[0-9]*" id="fx-amount" placeholder="Monto ($)" required>
           <button type="submit" class="btn-sub">Añadir Gasto Fijo</button>
         </form>
         <ul id="fixed-list" class="futuristic-list">
@@ -172,14 +171,14 @@
         <form id="goal-form" class="mini-fixed-form" style="margin-bottom: 0.75rem;">
           <input type="text" id="goal-title" placeholder="Proyecto (Ej: Viaje)" required>
           <div style="display:flex; gap:0.4rem;">
-            <input type="number" id="goal-target" placeholder="Meta Total ($)" required>
-            <input type="number" id="goal-current" placeholder="Actual Inicial ($)" required>
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="goal-target" placeholder="Meta Total ($)" required>
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="goal-current" placeholder="Actual Inicial ($)" required>
           </div>
           <button type="submit" class="btn-sub">Definir / Reiniciar Meta</button>
         </form>
 
         <form id="aportar-ahorro-form" style="display: flex; gap: 0.4rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;">
-          <input type="number" id="aporte-amount" placeholder="Monto ahorrado este mes ($)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
+          <input type="number" inputmode="numeric" pattern="[0-9]*" id="aporte-amount" placeholder="Monto ahorrado este mes ($)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
           <button type="submit" class="btn-sub" style="background: #34d399; color: #05070b; padding: 0.4rem 0.8rem; font-size: 0.7rem; font-weight: 700;">+ Ya ahorré</button>
         </form>
       </section>
