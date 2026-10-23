@@ -88,7 +88,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // Upsert o insertar límite de presupuesto
       await supabaseClient.from('category_budgets').delete().eq('category_name', category_name);
       const { error } = await supabaseClient
         .from('category_budgets')
@@ -249,7 +248,6 @@ async function cargarCategorias() {
     });
   }
 
-  // Cargar también en el selector de presupuestos (solo categorías de gasto)
   if (selectBudgetCat) {
     const { data: expenseCats } = await supabaseClient.from('user_categories').select('*').eq('type', 'expense');
     let listaExp = expenseCats || [];
@@ -377,8 +375,7 @@ function renderizarPanel(transactions, fixedExpenses, goals, budgets) {
   document.getElementById('current-balance').innerText = `$ ${totalIncome - totalExpense}`;
   document.getElementById('free-disposable').innerText = `$ ${totalIncome - totalExpense}`;
 
-  // Renderizar gráfico de gastos por categoría y comprobar presupuestos
-  renderizarGraficoCategorias(gastosPorCategoria, budgets);
+  renderizarGraficoCategorias(gastosPorCategoria, budgets || []);
 }
 
 function renderizarGraficoCategorias(gastosMap, budgets) {
@@ -398,7 +395,6 @@ function renderizarGraficoCategorias(gastosMap, budgets) {
     return;
   }
 
-  // Verificar presupuestos y alertas
   labels.forEach(cat => {
     const gastado = gastosMap[cat];
     const presupuestoObj = budgets.find(b => b.category_name === cat);
@@ -411,20 +407,20 @@ function renderizarGraficoCategorias(gastosMap, budgets) {
       const porcentaje = (gastado / limite) * 100;
       if (porcentaje >= 100) {
         estadoTexto = `$ ${gastado} / $ ${limite} (⚠️ ¡Límite superado!)`;
-        colorTexto = '#f87171'; // Rojo
+        colorTexto = '#f87171';
       } else if (porcentaje >= 80) {
         estadoTexto = `$ ${gastado} / $ ${limite} (⚡ Cerca del límite)`;
-        colorTexto = '#fbbf24'; // Amarillo
+        colorTexto = '#fbbf24';
       } else {
         estadoTexto = `$ ${gastado} / $ ${limite} (Restan $ ${limite - gastado})`;
-        colorTexto = '#34d399'; // Verde
+        colorTexto = '#34d399';
       }
     }
 
     const row = document.createElement('div');
     row.style.display = 'flex';
     row.style.justifyContent = 'space-between';
-    row.style.alignItems: 'center';
+    row.style.alignItems = 'center';
     row.innerHTML = `
       <strong style="color: #f1f5f9;">${cat}:</strong>
       <span style="color: ${colorTexto}; font-weight: 600;">${estadoTexto}</span>
