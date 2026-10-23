@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Platita - Calculadora de Vaquita</title>
+  <title>Platita - La Juntadita</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
       <!-- Header Superior -->
       <header class="top-header">
         <div class="header-top-row">
-          <h1 class="logo-title">Vaquetas / Gastos</h1>
+          <h1 class="logo-title">La juntadita</h1>
           <div class="header-right">
             <a href="#" onclick="cambiarPagina('app.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Volver</a>
           </div>
@@ -32,7 +32,7 @@
 
       <!-- Botón de Limpiar Datos -->
       <section style="margin-bottom: 1rem; text-align: right;">
-        <button onclick="limpiarDatosVaquita()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.4rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">🗑️ Limpiar Vaquita</button>
+        <button onclick="limpiarDatosVaquita()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.4rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">🗑️ Limpiar La Juntadita</button>
       </section>
 
       <!-- Paso 1: Agregar Participantes con Alias -->
@@ -102,8 +102,7 @@
   </div>
 
   <script>
-    // Recuperamos y aseguramos que cada integrante sea un objeto válido
-    let datosCrudos = JSON.parse(localStorage.getItem('platita_vaquita_integrantes_v3')) || [];
+    let datosCrudos = JSON.parse(localStorage.getItem('platita_juntadita_integrantes')) || [];
     let integrantes = datosCrudos.map(item => {
       if (typeof item === 'string') {
         return { nombre: item, alias: 'Sin alias', emoji: '😎' };
@@ -111,7 +110,7 @@
       return item;
     });
 
-    let gastosVaquita = JSON.parse(localStorage.getItem('platita_vaquita_gastos')) || [];
+    let gastosVaquita = JSON.parse(localStorage.getItem('platita_juntadita_gastos')) || [];
     let ultimasTransaccionesCalculadas = [];
 
     function formatearDinero(monto) {
@@ -128,7 +127,7 @@
         return;
       }
       let numeroFormateado = Number(valorLimpiado).toLocaleString('es-AR');
-      input.value = `$ ${numeroFormateado}`; }  function limpiarMonto(valorString) { if (!valorString) return 0; let limpio = valorString.toString().replace(/\D/g, ''); return parseFloat(limpio) \vert{}\vert{} 0; }  function cambiarPagina(urlDestino) { const overlay = document.getElementById('transition-overlay'); if (overlay) overlay.classList.add('active'); setTimeout(() => { window.location.href = urlDestino; }, 2000); }  window.addEventListener('pageshow', () => { const overlay = document.getElementById('transition-overlay'); if (overlay) overlay.classList.remove('active'); });  document.addEventListener('DOMContentLoaded', () => { actualizarInterfaz();  const personForm = document.getElementById('add-person-form'); personForm.addEventListener('submit', (e) => { e.preventDefault(); const inputNombre = document.getElementById('person-name'); const inputAlias = document.getElementById('person-alias'); const selectEmoji = document.getElementById('person-emoji');  const nombre = inputNombre.value.trim(); const alias = inputAlias.value.trim() \vert{}\vert{} 'Sin alias'; const emoji = selectEmoji.value;  if (nombre && !integrantes.some(p => p.nombre === nombre)) { integrantes.push({ nombre, alias, emoji }); inputNombre.value = ''; inputAlias.value = ''; guardarYActualizar(); } else { alert('Ese nombre ya existe o está vacío.'); } });  const expenseForm = document.getElementById('add-expense-form'); expenseForm.addEventListener('submit', (e) => { e.preventDefault(); const payer = document.getElementById('expense-payer').value; const desc = document.getElementById('expense-desc').value.trim(); const amount = limpiarMonto(document.getElementById('expense-amount').value);  if (!payer \vert{}\vert{} isNaN(amount) \vert{}\vert{} amount <= 0) return;  gastosVaquita.push({ id: Date.now(), payer, desc, amount: Math.round(amount) }); expenseForm.reset(); guardarYActualizar(); }); });  function guardarYActualizar() { localStorage.setItem('platita_vaquita_integrantes_v3', JSON.stringify(integrantes)); localStorage.setItem('platita_vaquita_gastos', JSON.stringify(gastosVaquita)); actualizarInterfaz(); }  function limpiarDatosVaquita() { if (confirm('¿Estás seguro de borrar todos los datos de esta vaquita?')) { integrantes = []; gastosVaquita = []; localStorage.removeItem('platita_vaquita_integrantes_v3'); localStorage.removeItem('platita_vaquita_gastos'); actualizarInterfaz(); } }  function eliminarPersona(nombre) { integrantes = integrantes.filter(p => p.nombre !== nombre); gastosVaquita = gastosVaquita.filter(g => g.payer !== nombre); guardarYActualizar(); }  function eliminarGasto(id) { gastosVaquita = gastosVaquita.filter(g => g.id !== id); guardarYActualizar(); }  function copiarAlias(alias) { if (!alias \vert{}\vert{} alias === 'Sin alias') { alert('Esta persona no cargó su alias de Mercado Pago.'); return; } navigator.clipboard.writeText(alias).then(() => { alert(`¡Alias "${alias}" copiado al portapapeles! Ya podés pegarlo en Mercado Pago 💳`);
+      input.value = `$ ${numeroFormateado}`; }  function limpiarMonto(valorString) { if (!valorString) return 0; let limpio = valorString.toString().replace(/\D/g, ''); return parseFloat(limpio) \vert{}\vert{} 0; }  function cambiarPagina(urlDestino) { const overlay = document.getElementById('transition-overlay'); if (overlay) overlay.classList.add('active'); setTimeout(() => { window.location.href = urlDestino; }, 2000); }  window.addEventListener('pageshow', () => { const overlay = document.getElementById('transition-overlay'); if (overlay) overlay.classList.remove('active'); });  document.addEventListener('DOMContentLoaded', () => { actualizarInterfaz();  const personForm = document.getElementById('add-person-form'); personForm.addEventListener('submit', (e) => { e.preventDefault(); const inputNombre = document.getElementById('person-name'); const inputAlias = document.getElementById('person-alias'); const selectEmoji = document.getElementById('person-emoji');  const nombre = inputNombre.value.trim(); const alias = inputAlias.value.trim() \vert{}\vert{} 'Sin alias'; const emoji = selectEmoji.value;  if (nombre && !integrantes.some(p => p.nombre === nombre)) { integrantes.push({ nombre, alias, emoji }); inputNombre.value = ''; inputAlias.value = ''; guardarYActualizar(); } else { alert('Ese nombre ya existe o está vacío.'); } });  const expenseForm = document.getElementById('add-expense-form'); expenseForm.addEventListener('submit', (e) => { e.preventDefault(); const payer = document.getElementById('expense-payer').value; const desc = document.getElementById('expense-desc').value.trim(); const amount = limpiarMonto(document.getElementById('expense-amount').value);  if (!payer \vert{}\vert{} isNaN(amount) \vert{}\vert{} amount <= 0) return;  gastosVaquita.push({ id: Date.now(), payer, desc, amount: Math.round(amount) }); expenseForm.reset(); guardarYActualizar(); }); });  function guardarYActualizar() { localStorage.setItem('platita_juntadita_integrantes', JSON.stringify(integrantes)); localStorage.setItem('platita_juntadita_gastos', JSON.stringify(gastosVaquita)); actualizarInterfaz(); }  function limpiarDatosVaquita() { if (confirm('¿Estás seguro de borrar todos los datos de esta Juntadita?')) { integrantes = []; gastosVaquita = []; localStorage.removeItem('platita_juntadita_integrantes'); localStorage.removeItem('platita_juntadita_gastos'); actualizarInterfaz(); } }  function eliminarPersona(nombre) { integrantes = integrantes.filter(p => p.nombre !== nombre); gastosVaquita = gastosVaquita.filter(g => g.payer !== nombre); guardarYActualizar(); }  function eliminarGasto(id) { gastosVaquita = gastosVaquita.filter(g => g.id !== id); guardarYActualizar(); }  function copiarAlias(alias) { if (!alias \vert{}\vert{} alias === 'Sin alias') { alert('Esta persona no cargó su alias de Mercado Pago.'); return; } navigator.clipboard.writeText(alias).then(() => { alert(`¡Alias "${alias}" copiado al portapapeles! Ya podés pegarlo en Mercado Pago 💳`);
       }).catch(() => {
         alert('No se pudo copiar el alias automáticamente.');
       });
@@ -136,7 +135,7 @@
 
     function reclamarWhatsApp(deudor, acreedor, monto) {
       const acreedorObj = integrantes.find(p => p.nombre === acreedor);
-      const aliasTexto = acreedorObj && acreedorObj.alias !== 'Sin alias' ? ` (Alias: ${acreedorObj.alias})` : ''; const texto = `Hola ${deudor}! 👋 Te escribo porque quedaron pendientes ${formatearDinero(monto)} de la vaquita para ${acreedor}${aliasTexto}. ¡Avisame cuando puedas transferir! 🍻`;
+      const aliasTexto = acreedorObj && acreedorObj.alias !== 'Sin alias' ? ` (Alias: ${acreedorObj.alias})` : ''; const texto = `Hola ${deudor}! 👋 Te escribo porque quedaron pendientes ${formatearDinero(monto)} de la juntadita para ${acreedor}${aliasTexto}. ¡Avisame cuando puedas transferir! 🍻`;
       const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
       window.open(url, '_blank');
     }
@@ -266,31 +265,4 @@
               <span style="color: #34d399; font-weight: 700;">${formatearDinero(t.monto)}</span>
             </div>
             <div style="display: flex; gap: 0.3rem; margin-top: 0.2rem;">
-              <button onclick="copiarAlias('${aliasAcreedor}')" style="flex: 1; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; padding: 0.3rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">💳 Copiar Alias (${aliasAcreedor})</button>
-              <button onclick="reclamarWhatsApp('${t.de}', '${t.a}',${t.monto})" style="background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.3rem 0.5rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">📢 Reclamar</button>
-            </div>
-          `;
-          resultsContainer.appendChild(div);
-        });
-        if (btnWa) btnWa.style.display = 'block';
-      }
-    }
-
-    function compartirWhatsAppVaquita() {
-      let texto = `📊 *RESUMEN DE VAQUITA - PLATITA* 📊\n\n`;
-      texto += `👥 *Integrantes:* ${integrantes.map(p => `${p.emoji} ${p.nombre}`).join(', ')}\n`;
-      texto += `💰 *Gasto Total:* ${document.getElementById('total-vaquita-amount').innerText}\n\n`;
-      texto += `📝 *Detalle de Gastos:* \n`;
-      
-      gastosVaquita.forEach(g => {
-        texto += `• ${g.desc}: ${formatearDinero(g.amount)} (Pagó ${g.payer})\n`;
-      });
-
-      texto += `\n💸 *CÓMO SALDAR CUENTAS:*\n`;
-      ultimasTransaccionesCalculadas.forEach(t => {
-        texto += `👉 *${t.de}* le debe a *${t.a}* ➔ *${formatearDinero(t.monto)}*\n`;
-      });
-
-      texto += `\n✨ _Calculado con Platita App_`;
-
-      const url = `
+              <button onclick="copiarAlias('${aliasAcreedor}')" style="flex: 1; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; padding: 0.3rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight
