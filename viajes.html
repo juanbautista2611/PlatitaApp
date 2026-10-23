@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Platita - Gastos de Viaje</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Pantalla de carga / Transición -->
+  <div id="transition-overlay" class="page-transition-overlay">
+    <div class="loader-spinner"></div>
+    <span class="loader-text">Cargando Platita...</span>
+  </div>
+
+  <div class="app-container">
+    <main class="main-content">
+      <!-- Header Superior -->
+      <header class="top-header">
+        <div class="header-top-row">
+          <h1 class="logo-title">Modo Viaje</h1>
+          <div class="header-right">
+            <a href="#" onclick="cambiarPagina('app.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Volver</a>
+          </div>
+        </div>
+        <div class="welcome-block">
+          <span class="greeting-sub">Vacaciones y Escapadas</span>
+          <h2 style="font-size: 1.2rem;">División por Participantes</h2>
+        </div>
+      </header>
+
+      <!-- Paso 1: Integrantes del Viaje -->
+      <section class="card form-container-card" style="margin-bottom: 1.25rem;">
+        <h3>1. Viajeros del Grupo</h3>
+        <form id="add-traveler-form" style="display: flex; gap: 0.4rem; margin-top: 0.75rem;">
+          <input type="text" id="traveler-name" placeholder="Nombre (Ej: Juan, Gabi)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
+          <button type="submit" class="btn-sub" style="padding: 0.4rem 0.8rem; font-size: 0.7rem;">+ Añadir</button>
+        </form>
+        <div id="travelers-chips-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;">
+          <!-- Se cargan dinámicamente -->
+        </div>
+      </section>
+
+      <!-- Paso 2: Registrar Gasto y Seleccionar Quiénes Participan -->
+      <section class="card form-container-card" style="margin-bottom: 1.25rem;">
+        <h3>2. Registrar Gasto del Viaje</h3>
+        <form id="add-travel-expense-form" class="futuristic-form" style="margin-top: 0.75rem;">
+          <div class="form-row" style="margin-bottom: 0.4rem;">
+            <select id="expense-travel-payer" required style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem; width: 100%;">
+              <option value="">¿Quién pagó este gasto?</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin-bottom: 0.4rem;">
+            <input type="text" id="expense-travel-desc" placeholder="Concepto (Ej: Hotel, Alquiler de Auto)" required style="width: 100%;">
+          </div>
+          <div class="form-row" style="margin-bottom: 0.4rem;">
+            <input type="number" id="expense-travel-amount" placeholder="Monto Total ($)" required style="width: 100%;">
+          </div>
+
+          <!-- Selección de participantes para este gasto -->
+          <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+            <label style="font-size: 0.65rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">¿Quiénes consumen o participan de este gasto?</label>
+            <div id="participants-checkboxes" style="display: flex; flex-wrap: wrap; gap: 0.5rem; background: rgba(15, 23, 42, 0.5); padding: 0.5rem; border-radius: 0.4rem; border: 1px solid #334155;">
+              <span style="color: #64748b; font-size: 0.7rem;">Agregá viajeros primero.</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-sub" style="width: 100%; margin-top: 0.4rem;">Registrar Gasto de Viaje</button>
+        </form>
+
+        <!-- Lista de gastos de viaje -->
+        <ul id="travel-expenses-list" class="futuristic-movements" style="margin-top: 1rem;">
+          <li style="text-align: center; color: #64748b; font-size: 0.75rem;">No hay gastos de viaje cargados.</li>
+        </ul>
+      </section>
+
+      <!-- Paso 3: Resultados de Cuentas del Viaje -->
+      <section class="card section-box" style="margin-bottom: 2rem;">
+        <div class="section-title-row">
+          <h3>3. Balance y Deudas del Viaje</h3>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+          <span style="font-size: 0.75rem; color: #94a3b8;">Costo Total del Viaje:</span>
+          <strong id="total-travel-amount" style="font-size: 1rem; color: #38bdf8;">$ 0</strong>
+        </div>
+
+        <h4 style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Cómo saldar cuentas:</h4>
+        <div id="travel-settlement-results" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá viajeros y gastos para calcular.</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let viajeros = [];
+    let gastosViaje = [];
+
+    function cambiarPagina(urlDestino) {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.add('active');
+      setTimeout(() => { window.location.href = urlDestino; }, 2000);
+    }
+
+    window.addEventListener('pageshow', () => {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.remove('active');
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Agregar Viajero
+      const travelerForm = document.getElementById('add-traveler-form');
+      travelerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('traveler-name');
+        const nombre = input.value.trim();
+        if (nombre && !viajeros.includes(nombre)) {
+          viajeros.push(nombre);
+          input.value = '';
+          actualizarInterfazViaje();
+        }
+      });
+
+      // Agregar Gasto de Viaje
+      const expenseForm = document.getElementById('add-travel-expense-form');
+      expenseForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const payer = document.getElementById('expense-travel-payer').value;
+        const desc = document.getElementById('expense-travel-desc').value.trim();
+        const amount = parseFloat(document.getElementById('expense-travel-amount').value);
+
+        // Recolectar checkboxes seleccionados
+        const checkboxes = document.querySelectorAll('.participant-chk:checked');
+        const participants = Array.from(checkboxes).map(chk => chk.value);
+
+        if (!payer || isNaN(amount) || amount <= 0) return;
+        if (participants.length === 0) {
+          alert('Seleccioná al menos un participante para este gasto.');
+          return;
+        }
+
+        gastosViaje.push({
+          id: Date.now(),
+          payer,
+          desc,
+          amount: Math.round(amount),
+          participants
+        });
+
+        expenseForm.reset();
+        // Volver a marcar todos por defecto al resetear
+        document.querySelectorAll('.participant-chk').forEach(c => c.checked = true);
+        actualizarInterfazViaje();
+      });
+    });
+
+    function eliminarViajero(nombre) {
+      viajeros = viajeros.filter(v => v !== nombre);
+      gastosViaje = gastosViaje.filter(g => g.payer !== nombre);
+      gastosViaje.forEach(g => {
+        g.participants = g.participants.filter(p => p !== nombre);
+      });
+      actualizarInterfazViaje();
+    }
+
+    function eliminarGastoViaje(id) {
+      gastosViaje = gastosViaje.filter(g => g.id !== id);
+      actualizarInterfazViaje();
+    }
+
+    function actualizarInterfazViaje() {
+      const chipsContainer = document.getElementById('travelers-chips-container');
+      const selectPayer = document.getElementById('expense-travel-payer');
+      const checkboxesContainer = document.getElementById('participants-checkboxes');
+
+      chipsContainer.innerHTML = '';
+      selectPayer.innerHTML = '<option value="">¿Quién pagó este gasto?</option>';
+      checkboxesContainer.innerHTML = '';
+
+      if (viajeros.length === 0) {
+        chipsContainer.innerHTML = '<span style="color: #64748b; font-size: 0.7rem;">No hay viajeros aún.</span>';
+        checkboxesContainer.innerHTML = '<span style="color: #64748b; font-size: 0.7rem;">Agregá viajeros primero.</span>';
+      }
+
+      viajeros.forEach(v => {
+        // Chip visual
+        const chip = document.createElement('div');
+        chip.style.cssText = 'background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem; display: flex; align-items: center; gap: 0.4rem;';
+        chip.innerHTML = `${v} <span style="cursor: pointer; font-weight: bold; color: #f87171;" onclick="eliminarViajero('${v}')">×</span>`;
+        chipsContainer.appendChild(chip);
+
+        // Option de pagador
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.innerText = v;
+        selectPayer.appendChild(opt);
+
+        // Checkbox de participante
+        const label = document.createElement('label');
+        label.style.cssText = 'font-size: 0.7rem; color: #f1f5f9; display: flex; align-items: center; gap: 0.3rem; cursor: pointer;';
+        label.innerHTML = `<input type="checkbox" class="participant-chk" value="${v}" checked style="accent-color: #3b82f6;"> ${v}`;
+        checkboxesContainer.appendChild(label);
+      });
+
+      // Lista de Gastos
+      const expensesListUl = document.getElementById('travel-expenses-list');
+      expensesListUl.innerHTML = '';
+      if (gastosViaje.length === 0) {
+        expensesListUl.innerHTML = '<li style="text-align: center; color: #64748b; font-size: 0.75rem;">No hay gastos de viaje cargados.</li>';
+      } else {
+        gastosViaje.forEach(g => {
+          const li = document.createElement('li');
+          li.className = 'fixed-item-row';
+          li.innerHTML = `
+            <div class="fixed-info">
+              <strong>${g.desc}</strong>
+              <span style="font-size: 0.7rem; color: #94a3b8;">Pagó: ${g.payer} (${g.participants.length} participantes)</span>
+              <span class="expense-amount">$ ${g.amount}</span>
+            </div>
+            <div class="fixed-actions">
+              <button class="btn-delete-fixed" onclick="eliminarGastoViaje(${g.id})">🗑️</button>
+            </div>
+          `;
+          expensesListUl.appendChild(li);
+        });
+      }
+
+      calcularLiquidacionViaje();
+    }
+
+    function calcularLiquidacionViaje() {
+      const totalAmountEl = document.getElementById('total-travel-amount');
+      const resultsContainer = document.getElementById('travel-settlement-results');
+
+      let totalGeneral = 0;
+      const pagadoPorPersona = {};
+      const debePorPersona = {};
+
+      viajeros.forEach(v => {
+        pagadoPorPersona[v] = 0;
+        debePorPersona[v] = 0;
+      });
+
+      gastosViaje.forEach(g => {
+        totalGeneral += g.amount;
+        if (pagadoPorPersona[g.payer] !== undefined) {
+          pagadoPorPersona[g.payer] += g.amount;
+        }
+
+        // Dividir el gasto solo entre los participantes seleccionados
+        const cuotaParte = g.amount / g.participants.length;
+        g.participants.forEach(p => {
+          if (debePorPersona[p] !== undefined) {
+            debePorPersona[p] += cuotaParte;
+          }
+        });
+      });
+
+      totalAmountEl.innerText = `$ ${totalGeneral.toLocaleString('es-AR')}`;
+
+      if (viajeros.length === 0 || totalGeneral === 0) {
+        resultsContainer.innerHTML = '<span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá viajeros y gastos para calcular.</span>';
+        return;
+      }
+
+      // Balance = Cuánto pagó menos Cuánto debe consumir
+      const balances = [];
+      viajeros.forEach(v => {
+        const balance = pagadoPorPersona[v] - debePorPersona[v];
+        balances.push({ nombre: v, balance: balance });
+      });
+
+      let deudores = balances.filter(b => b.balance < -1).map(b => ({ ...b }));
+      let acreedores = balances.filter(b => b.balance > 1).map(b => ({ ...b }));
+
+      resultsContainer.innerHTML = '';
+      let transacciones = [];
+
+      let d = 0, a = 0;
+      while (d < deudores.length && a < acreedores.length) {
+        let deudor = deudores[d];
+        let acreedor = acreedores[a];
+
+        let montoABajar = Math.min(Math.abs(deudor.balance), acreedor.balance);
+
+        transacciones.push({
+          de: deudor.nombre,
+          a: acreedor.nombre,
+          monto: Math.round(montoABajar)
+        });
+
+        deudor.balance += montoABajar;
+        acreedor.balance -= montoABajar;
+
+        if (Math.abs(deudor.balance) < 1) d++;
+        if (acreedor.balance < 1) a++;
+      }
+
+      if (transacciones.length === 0) {
+        resultsContainer.innerHTML = '<div style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0.6rem; border-radius: 0.4rem; text-align: center; font-size: 0.75rem; font-weight: 600;">✨ ¡Cuentas del viaje saldadas! Nadie le debe nada a nadie.</div>';
+      } else {
+        transacciones.forEach(t => {
+          const div = document.createElement('div');
+          div.style.cssText = 'background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 0.6rem; border-radius: 0.4rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;';
+          div.innerHTML = `
+            <span style="color: #f1f5f9;"><strong>${t.de}</strong> le debe a <strong>${t.a}</strong></span>
+            <span style="color: #34d399; font-weight: 700;">$ ${t.monto.toLocaleString('es-AR')}</span>
+          `;
+          resultsContainer.appendChild(div);
+        });
+      }
+    }
+  </script>
+</body>
+</html>
