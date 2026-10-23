@@ -2,6 +2,7 @@ const SUPABASE_URL = 'https://dhmnbvwntcqmgwvbohdt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTAxMjEsImV4cCI6MjEwODI2NjEyMX0.rho1v1cyZYlUJFXmewHL8Xhp1MxG6KqepWeHxXaJ9Pw';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let mainDoughnutChart = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const { data: { user } } = await supabaseClient.auth.getUser();
@@ -27,7 +28,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   actualizarFechaBadge();
 
-  // Inicializar selector de mes con el mes actual (YYYY-MM)
   const filterMonthInput = document.getElementById('filter-month');
   const hoy = new Date();
   const mesActualStr = hoy.toISOString().slice(0, 7);
@@ -46,13 +46,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarCategorias();
   cargarDatosGenerales();
 
-  // Cambiar categorías según tipo (gasto/ingreso)
   const txTypeSelect = document.getElementById('tx-type');
   if (txTypeSelect) {
     txTypeSelect.addEventListener('change', () => cargarCategorias());
   }
 
-  // Crear nueva categoría personalizada
+  // Crear categoría personalizada
   const categoryForm = document.getElementById('category-form');
   if (categoryForm) {
     categoryForm.addEventListener('submit', async (e) => {
@@ -72,6 +71,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('new-cat-name').value = '';
         await cargarCategorias();
         alert('¡Categoría creada con éxito!');
+      }
+    });
+  }
+
+  // Registrar presupuesto máximo por categoría
+  const budgetForm = document.getElementById('budget-form');
+  if (budgetForm) {
+    budgetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const category_name = document.getElementById('budget-category').value;
+      const max_budget = parseFloat(document.getElementById('budget-max').value);
+
+      if (!category_name) {
+        alert('Seleccioná una categoría.');
+        return;
+      }
+
+      // Upsert o insertar límite de presupuesto
+      await supabaseClient.from('category_budgets').delete().eq('category_name', category_name);
+      const { error } = await supabaseClient
+        .from('category_budgets')
+        .insert([{ category_name, max_budget: Math.round(max_budget) }]);
+
+      if (error) alert('Error al guardar presupuesto: ' + error.message);
+      else {
+        budgetForm.reset();
+        alert('¡Presupuesto fijado con éxito!');
+        cargarDatosGenerales();
       }
     });
   }
@@ -146,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Aportar a la Meta de Ahorro (Este mes ya ahorré)
+  // Aportar a la Meta de Ahorro
   const aportarAhorroForm = document.getElementById('aportar-ahorro-form');
   if (aportarAhorroForm) {
     aportarAhorroForm.addEventListener('submit', async (e) => {
@@ -198,15 +225,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function cargarCategorias() {
   const type = document.getElementById('tx-type').value;
   const selectCat = document.getElementById('tx-category');
-  if (!selectCat) return;
+  const selectBudgetCat = document.getElementById('budget-category');
 
   const { data: cats } = await supabaseClient
     .from('user_categories')
     .select('*')
     .eq('type', type);
 
-  selectCat.innerHTML = '<option value="">Seleccioná categoría...</option>';
-  
   let lista = cats || [];
   if (lista.length === 0) {
     lista = type === 'expense' 
@@ -214,12 +239,30 @@ async function cargarCategorias() {
       : [{name: 'Sueldo'}, {name: 'Freelance'}, {name: 'Ventas'}, {name: 'Otros'}];
   }
 
-  lista.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.name;
-    opt.innerText = c.name;
-    selectCat.appendChild(opt);
-  });
+  if (selectCat) {
+    selectCat.innerHTML = '<option value="">Seleccioná categoría...</option>';
+    lista.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.name;
+      opt.innerText = c.name;
+      selectCat.appendChild(opt);
+    });
+  }
+
+  // Cargar también en el selector de presupuestos (solo categorías de gasto)
+  if (selectBudgetCat) {
+    const { data: expenseCats } = await supabaseClient.from('user_categories').select('*').eq('type', 'expense');
+    let listaExp = expenseCats || [];
+    if (listaExp.length === 0) listaExp = [{name: 'Alimentos'}, {name: 'Servicios'}, {name: 'Transporte'}, {name: 'Entretenimiento'}];
+
+    selectBudgetCat.innerHTML = '<option value="">Seleccionar categoría de gasto...</option>';
+    listaExp.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.name;
+      opt.innerText = c.name;
+      selectBudgetCat.appendChild(opt);
+    });
+  }
 }
 
 function actualizarFechaBadge() {
@@ -239,18 +282,20 @@ async function cargarDatosGenerales() {
     const { data: transactions } = await supabaseClient.from('transactions').select('*').order('date', { ascending: false });
     const { data: fixedExpenses } = await supabaseClient.from('fixed_expenses').select('*');
     const { data: goals } = await supabaseClient.from('goals').select('*');
+    const { data: budgets } = await supabaseClient.from('category_budgets').select('*');
 
     const txFiltradas = (transactions || []).filter(tx => tx.date && tx.date.startsWith(selectedMonth));
 
-    renderizarPanel(txFiltradas, fixedExpenses || [], goals || []);
+    renderizarPanel(txFiltradas, fixedExpenses || [], goals || [], budgets || []);
   } catch (err) {
     console.error('Error cargando datos:', err);
   }
 }
 
-function renderizarPanel(transactions, fixedExpenses, goals) {
+function renderizarPanel(transactions, fixedExpenses, goals, budgets) {
   let totalIncome = 0;
   let totalExpense = 0;
+  const gastosPorCategoria = {};
 
   const movementsList = document.getElementById('movements-list');
   if (movementsList) {
@@ -259,8 +304,13 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
       movementsList.innerHTML = '<li>No hay movimientos registrados en este período.</li>';
     } else {
       transactions.forEach(tx => {
-        if (tx.type === 'income') totalIncome += Number(tx.amount);
-        else totalExpense += Number(tx.amount);
+        if (tx.type === 'income') {
+          totalIncome += Number(tx.amount);
+        } else {
+          totalExpense += Number(tx.amount);
+          const cat = tx.category.trim();
+          gastosPorCategoria[cat] = (gastosPorCategoria[cat] || 0) + Number(tx.amount);
+        }
 
         const li = document.createElement('li');
         li.className = 'fixed-item-row';
@@ -286,7 +336,10 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
       fixedList.innerHTML = '<li>No hay compromisos fijos.</li>';
     } else {
       fixedExpenses.forEach(fx => {
-        if (fx.status === 'paid') totalExpense += Number(fx.amount);
+        if (fx.status === 'paid') {
+          totalExpense += Number(fx.amount);
+          gastosPorCategoria['Gastos Fijos'] = (gastosPorCategoria['Gastos Fijos'] || 0) + Number(fx.amount);
+        }
 
         const li = document.createElement('li');
         li.className = 'fixed-item-row';
@@ -323,6 +376,86 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
   document.getElementById('monthly-expenses').innerText = `$ ${totalExpense}`;
   document.getElementById('current-balance').innerText = `$ ${totalIncome - totalExpense}`;
   document.getElementById('free-disposable').innerText = `$ ${totalIncome - totalExpense}`;
+
+  // Renderizar gráfico de gastos por categoría y comprobar presupuestos
+  renderizarGraficoCategorias(gastosPorCategoria, budgets);
+}
+
+function renderizarGraficoCategorias(gastosMap, budgets) {
+  const canvasElement = document.getElementById('mainCategoriesChart');
+  const statusContainer = document.getElementById('category-budgets-status');
+  if (!canvasElement || !statusContainer) return;
+
+  const ctx = canvasElement.getContext('2d');
+  const labels = Object.keys(gastosMap);
+  const dataValues = Object.values(gastosMap);
+
+  statusContainer.innerHTML = '';
+
+  if (labels.length === 0) {
+    statusContainer.innerHTML = '<span style="text-align:center; color:#64748b; display:block; padding: 0.5rem;">No hay gastos en este período.</span>';
+    if (mainDoughnutChart) mainDoughnutChart.destroy();
+    return;
+  }
+
+  // Verificar presupuestos y alertas
+  labels.forEach(cat => {
+    const gastado = gastosMap[cat];
+    const presupuestoObj = budgets.find(b => b.category_name === cat);
+    
+    let estadoTexto = `$ ${gastado} gastados`;
+    let colorTexto = '#94a3b8';
+
+    if (presupuestoObj) {
+      const limite = presupuestoObj.max_budget;
+      const porcentaje = (gastado / limite) * 100;
+      if (porcentaje >= 100) {
+        estadoTexto = `$ ${gastado} / $ ${limite} (⚠️ ¡Límite superado!)`;
+        colorTexto = '#f87171'; // Rojo
+      } else if (porcentaje >= 80) {
+        estadoTexto = `$ ${gastado} / $ ${limite} (⚡ Cerca del límite)`;
+        colorTexto = '#fbbf24'; // Amarillo
+      } else {
+        estadoTexto = `$ ${gastado} / $ ${limite} (Restan $ ${limite - gastado})`;
+        colorTexto = '#34d399'; // Verde
+      }
+    }
+
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems: 'center';
+    row.innerHTML = `
+      <strong style="color: #f1f5f9;">${cat}:</strong>
+      <span style="color: ${colorTexto}; font-weight: 600;">${estadoTexto}</span>
+    `;
+    statusContainer.appendChild(row);
+  });
+
+  const palette = ['#3b82f6', '#34d399', '#c084fc', '#fbbf24', '#38bdf8', '#fb7185', '#a855f7'];
+  const backgroundColors = labels.map((_, i) => palette[i % palette.length]);
+
+  if (mainDoughnutChart) mainDoughnutChart.destroy();
+  mainDoughnutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: dataValues,
+        backgroundColor: backgroundColors,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 10 }
+        }
+      }
+    }
+  });
 }
 
 window.toggleFixed = async function(id, currentStatus) {
