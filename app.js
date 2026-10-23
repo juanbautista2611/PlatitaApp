@@ -146,17 +146,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Reiniciar Mes
-  const resetBtn = document.getElementById('reset-month-btn');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', async () => {
-      if (confirm('¿Estás seguro de iniciar un nuevo mes? Se borrarán tus movimientos y se destildarán tus fijos.')) {
-        await supabaseClient.from('transactions').delete().neq('id', 0);
-        await supabaseClient.from('fixed_expenses').update({ status: 'pending' }).neq('id', 0);
-        cargarDatosGenerales();
-      }
-    });
-  }
   // Aportar a la Meta de Ahorro (Este mes ya ahorré)
   const aportarAhorroForm = document.getElementById('aportar-ahorro-form');
   if (aportarAhorroForm) {
@@ -169,7 +158,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // Traer la meta actual de Supabase
       const { data: goals, error: fetchError } = await supabaseClient.from('goals').select('*');
       if (fetchError || !goals || goals.length === 0) {
         alert('Primero debés definir una meta de ahorro arriba.');
@@ -179,7 +167,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const goal = goals[0];
       const nuevoMontoActual = Number(goal.current_amount) + Math.round(montoAporte);
 
-      // Actualizar en Supabase
       const { error: updateError } = await supabaseClient
         .from('goals')
         .update({ current_amount: nuevoMontoActual })
@@ -195,7 +182,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-
+  // Reiniciar Mes
+  const resetBtn = document.getElementById('reset-month-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', async () => {
+      if (confirm('¿Estás seguro de iniciar un nuevo mes? Se borrarán tus movimientos y se destildarán tus fijos.')) {
+        await supabaseClient.from('transactions').delete().neq('id', 0);
+        await supabaseClient.from('fixed_expenses').update({ status: 'pending' }).neq('id', 0);
+        cargarDatosGenerales();
+      }
+    });
+  }
 });
 
 async function cargarCategorias() {
@@ -210,7 +207,6 @@ async function cargarCategorias() {
 
   selectCat.innerHTML = '<option value="">Seleccioná categoría...</option>';
   
-  // Categorías predeterminadas por defecto si el usuario no creó ninguna
   let lista = cats || [];
   if (lista.length === 0) {
     lista = type === 'expense' 
@@ -240,12 +236,10 @@ async function cargarDatosGenerales() {
     const filterMonthInput = document.getElementById('filter-month');
     const selectedMonth = filterMonthInput ? filterMonthInput.value : new Date().toISOString().slice(0, 7);
 
-    // Traer transacciones ordenadas
     const { data: transactions } = await supabaseClient.from('transactions').select('*').order('date', { ascending: false });
     const { data: fixedExpenses } = await supabaseClient.from('fixed_expenses').select('*');
     const { data: goals } = await supabaseClient.from('goals').select('*');
 
-    // Filtrar transacciones según el mes seleccionado (YYYY-MM)
     const txFiltradas = (transactions || []).filter(tx => tx.date && tx.date.startsWith(selectedMonth));
 
     renderizarPanel(txFiltradas, fixedExpenses || [], goals || []);
@@ -258,7 +252,7 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
   let totalIncome = 0;
   let totalExpense = 0;
 
- const movementsList = document.getElementById('movements-list');
+  const movementsList = document.getElementById('movements-list');
   if (movementsList) {
     movementsList.innerHTML = '';
     if (transactions.length === 0) {
@@ -269,7 +263,7 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
         else totalExpense += Number(tx.amount);
 
         const li = document.createElement('li');
-        li.className = 'fixed-item-row'; // Usamos la misma clase prolija de filas
+        li.className = 'fixed-item-row';
         li.innerHTML = `
           <div class="fixed-info">
             <strong>${tx.category}</strong>
@@ -325,11 +319,10 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
     document.getElementById('goal-progress-fill').style.width = '0%';
   }
 
-document.getElementById('monthly-income').innerText = `$ ${totalIncome}`;
+  document.getElementById('monthly-income').innerText = `$ ${totalIncome}`;
   document.getElementById('monthly-expenses').innerText = `$ ${totalExpense}`;
   document.getElementById('current-balance').innerText = `$ ${totalIncome - totalExpense}`;
   document.getElementById('free-disposable').innerText = `$ ${totalIncome - totalExpense}`;
-}
 }
 
 window.toggleFixed = async function(id, currentStatus) {
