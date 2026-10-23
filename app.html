@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Platita - Panel Financiero</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js para los gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -20,7 +22,7 @@
       <header class="top-header">
         <div class="header-top-row">
           <h1 class="logo-title">Platita</h1>
-        <div class="header-right">
+          <div class="header-right">
             <span id="current-date-badge" class="date-badge">Cargando...</span>
             <a href="#" onclick="cambiarPagina('perfil.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Perfil</a>
             <button id="logout-btn" title="Cerrar Sesión" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; cursor: pointer;">Salir</button>
@@ -38,6 +40,15 @@
           </div>
         </div>
       </header>
+
+      <!-- Alertas de Vencimientos Próximos (Nuevo) -->
+      <section id="alerts-widget-section" class="card" style="margin-bottom: 1.25rem; display: none; border-left: 3px solid #f87171; background: rgba(239, 68, 68, 0.05);">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <span style="font-size: 1rem;">⚠️</span>
+          <h3 style="font-size: 0.78rem; font-weight: 700; color: #f87171; text-transform: uppercase; letter-spacing: 0.04em;">Vencimientos Cercanos</h3>
+        </div>
+        <div id="alerts-container" style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.73rem; color: #cbd5e1;"></div>
+      </section>
 
       <!-- Saldo Actual -->
       <section class="card balance-main-card">
@@ -78,6 +89,23 @@
         </div>
       </div>
 
+      <!-- Gráfico de Gastos por Categoría y Presupuestos -->
+      <section class="card" style="margin-bottom: 1.25rem;">
+        <h3 style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Gastos por Categoría</h3>
+        <div style="position: relative; width: 100%; max-width: 240px; margin: 0 auto 0.75rem auto;">
+          <canvas id="mainCategoriesChart"></canvas>
+        </div>
+        <div id="category-budgets-status" style="font-size: 0.72rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;"></div>
+      </section>
+
+      <!-- Gráfico de Evolución de Gastos Diarios (Nuevo) -->
+      <section class="card" style="margin-bottom: 1.25rem;">
+        <h3 style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Evolución Diaria de Gastos</h3>
+        <div style="position: relative; width: 100%; height: 180px; margin: 0 auto;">
+          <canvas id="dailyTrendChart"></canvas>
+        </div>
+      </section>
+
       <!-- Registrar Operación con Categorías Personalizadas -->
       <section class="card form-container-card">
         <h3>Registrar Operación</h3>
@@ -107,6 +135,20 @@
         </div>
       </section>
 
+      <!-- Definir Presupuesto Máximo por Categoría -->
+      <section class="card section-box" style="margin-bottom: 1.25rem;">
+        <div class="section-title-row">
+          <h3>Presupuesto por Categoría</h3>
+        </div>
+        <form id="budget-form" class="mini-fixed-form">
+          <select id="budget-category" required style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem; width: 100%; margin-bottom: 0.4rem;">
+            <option value="">Seleccionar categoría de gasto...</option>
+          </select>
+          <input type="number" id="budget-max" placeholder="Tope máximo ($)" required>
+          <button type="submit" class="btn-sub" style="margin-top: 0.4rem;">Fijar Límite</button>
+        </form>
+      </section>
+
       <!-- Compromisos Fijos -->
       <section class="card section-box" style="margin-bottom: 1.25rem;">
         <div class="section-title-row">
@@ -121,7 +163,8 @@
           <li>Cargando compromisos...</li>
         </ul>
       </section>
-<!-- Meta de Ahorro -->
+
+      <!-- Meta de Ahorro -->
       <section class="card section-box" style="margin-bottom: 1.25rem;">
         <div class="section-title-row">
           <h3>Meta de Ahorro</h3>
@@ -135,7 +178,6 @@
           <button type="submit" class="btn-sub">Definir / Reiniciar Meta</button>
         </form>
 
-        <!-- Nuevo formulario para aportar al ahorro mensual -->
         <form id="aportar-ahorro-form" style="display: flex; gap: 0.4rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;">
           <input type="number" id="aporte-amount" placeholder="Monto ahorrado este mes ($)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.4rem; border-radius: 0.4rem; font-size: 0.75rem;">
           <button type="submit" class="btn-sub" style="background: #34d399; color: #05070b; padding: 0.4rem 0.8rem; font-size: 0.7rem; font-weight: 700;">+ Ya ahorré</button>
@@ -143,7 +185,7 @@
       </section>
 
       <!-- Últimos Movimientos -->
-      <section class="card section-box" style="margin-bottom: 2rem;">
+      <section class="card section-box" style="margin-bottom: 1.25rem;">
         <div class="section-title-row">
           <h3>Movimientos del Período</h3>
         </div>
@@ -151,16 +193,16 @@
           <li>Cargando movimientos...</li>
         </ul>
       </section>
-    </main>
 
-   <!-- Footer de Herramientas / Utilidades -->
-    <section class="card" style="margin-bottom: 1.25rem; text-align: center;">
-      <h3 style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em;">Herramientas y Divisorias</h3>
-      <div style="display: flex; gap: 0.5rem;">
-        <button onclick="cambiarPagina('calculadora.html'); return false;" class="btn-sub" style="flex: 1; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.6rem; font-size: 0.72rem; font-weight: 600;">🧮 Vaquita / Amigos</button>
-        <button onclick="cambiarPagina('viajes.html'); return false;" class="btn-sub" style="flex: 1; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0.6rem; font-size: 0.72rem; font-weight: 600;">✈️ Modo Viaje</button>
-      </div>
-    </section>
+      <!-- Footer con Herramientas de Vaquita y Viajes -->
+      <section class="card" style="margin-bottom: 2rem; text-align: center;">
+        <h3 style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em;">Herramientas y Divisorias</h3>
+        <div style="display: flex; gap: 0.5rem;">
+          <button onclick="cambiarPagina('calculadora.html'); return false;" class="btn-sub" style="flex: 1; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.6rem; font-size: 0.72rem; font-weight: 600;">🧮 Vaquita / Amigos</button>
+          <button onclick="cambiarPagina('viajes.html'); return false;" class="btn-sub" style="flex: 1; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0.6rem; font-size: 0.72rem; font-weight: 600;">✈️ Modo Viaje</button>
+        </div>
+      </section>
+    </main>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

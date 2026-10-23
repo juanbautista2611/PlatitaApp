@@ -3,6 +3,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let mainDoughnutChart = null;
+let dailyTrendChart = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const { data: { user } } = await supabaseClient.auth.getUser();
@@ -45,6 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await cargarCategorias();
   cargarDatosGenerales();
+  verificarAlertasVencimientos();
 
   const txTypeSelect = document.getElementById('tx-type');
   if (txTypeSelect) {
@@ -209,6 +211,46 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+async function verificarAlertasVencimientos() {
+  const section = document.getElementById('alerts-widget-section');
+  const container = document.getElementById('alerts-container');
+  if (!section || !container) return;
+
+  const { data: events } = await supabaseClient.from('calendar_events').select('*').eq('status', 'pending');
+  if (!events || events.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  const hoyStr = new Date().toISOString().split('T')[0];
+  const hoyDate = new Date(hoyStr);
+
+  const proximos = events.filter(ev => {
+    const vencDate = new Date(ev.due_date);
+    const diffTime = vencDate - hoyDate;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Alerta si vence hoy (0), ya venció (< 0) o vence en los próximos 4 días (<= 4)
+    return diffDays <= 4;
+  });
+
+  if (proximos.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  container.innerHTML = '';
+  proximos.forEach(ev => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.4); padding: 0.4rem 0.6rem; border-radius: 0.3rem;';
+    row.innerHTML = `
+      <span><strong>${ev.title}</strong> ($ ${ev.amount})</span>
+      <span style="color: #f87171; font-weight: 600;">Vence: ${ev.due_date}</span>
+    `;
+    container.appendChild(row);
+  });
+}
+
 async function cargarCategorias() {
   const type = document.getElementById('tx-type').value;
   const selectCat = document.getElementById('tx-category');
@@ -272,16 +314,17 @@ async function cargarDatosGenerales() {
 
     const txFiltradas = (transactions || []).filter(tx => tx.date && tx.date.startsWith(selectedMonth));
 
-    renderizarPanel(txFiltradas, fixedExpenses || [], goals || [], budgets || []);
+    renderizarPanel(txFiltradas, fixedExpenses || [], goals || [], budgets || [], selectedMonth);
   } catch (err) {
     console.error('Error cargando datos:', err);
   }
 }
 
-function renderizarPanel(transactions, fixedExpenses, goals, budgets) {
+function renderizarPanel(transactions, fixedExpenses, goals, budgets, selectedMonth) {
   let totalIncome = 0;
   let totalExpense = 0;
   const gastosPorCategoria = {};
+  const gastosDiarios = {};
 
   const movementsList = document.getElementById('movements-list');
   if (movementsList) {
@@ -296,6 +339,10 @@ function renderizarPanel(transactions, fixedExpenses, goals, budgets) {
           totalExpense += Number(tx.amount);
           const cat = tx.category.trim();
           gastosPorCategoria[cat] = (gastosPorCategoria[cat] || 0) + Number(tx.amount);
+
+          // Agrupar por día para el gráfico de líneas
+          const dia = tx.date; // formato YYYY-MM-DD
+          gastosDiarios[dia] = (gastosDiarios[dia] || 0) + Number(tx.amount);
         }
 
         const li = document.createElement('li');
@@ -364,6 +411,7 @@ function renderizarPanel(transactions, fixedExpenses, goals, budgets) {
   document.getElementById('free-disposable').innerText = `$ ${totalIncome - totalExpense}`;
 
   renderizarGraficoCategorias(gastosPorCategoria, budgets || []);
+  renderizarGraficoTendenciaDiaria(gastosDiarios, selectedMonth);
 }
 
 function renderizarGraficoCategorias(gastosMap, budgets) {
@@ -436,6 +484,67 @@ function renderizarGraficoCategorias(gastosMap, budgets) {
         legend: {
           position: 'bottom',
           labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 10 }
+        }
+      }
+    }
+  });
+}
+
+function renderizarGraficoTendenciaDiaria(gastosDiariosMap, selectedMonth) {
+  const canvasElement = document.getElementById('dailyTrendChart');
+  if (!canvasElement) return;
+
+  const ctx = canvasElement.getContext('2d');
+
+  // Obtener días del mes seleccionado (ej: '2026-06')
+  const [anio, mes] = selectedMonth.split('-');
+  const diasEnMes = new Date(anio, mes, 0).getDate();
+
+  const labels = [];
+  const dataValues = [];
+  let acumulado = 0;
+
+  for (let d = 1; d <= diasEnMes; d++) {
+    const diaStr = `${selectedMonth}-${String(d).padStart(2, '0')}`;
+    labels.value = d;
+    labels.push(d);
+    
+    if (gastosDiariosMap[diaStr]) {
+      acumulado += gastosDiariosMap[diaStr];
+    }
+    dataValues.push(acumulado);
+  }
+
+  if (dailyTrendChart) dailyTrendChart.destroy();
+  dailyTrendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Gasto Acumulado ($)',
+        data: dataValues,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#94a3b8', font: { size: 9 } },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' }
+        },
+        y: {
+          ticks: { color: '#94a3b8', font: { size: 9 } },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' }
         }
       }
     }
