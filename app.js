@@ -3,7 +3,23 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Verificar si hay usuario con sesión activa, si no, redirigir al login (index.html)
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  // Botón Salir / Logout
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = 'index.html';
+    });
+  }
+
   actualizarFechaBadge();
 
   const txDateInput = document.getElementById('tx-date');
@@ -13,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cargarDatosGenerales();
 
-  // Registrar Operación Manual (Gasto o Ingreso)
+  // Registrar Operación Manual
   const txForm = document.getElementById('transaction-form');
   if (txForm) {
     txForm.addEventListener('submit', async (e) => {
@@ -27,9 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .from('transactions')
         .insert([{ type, category, amount: Math.round(amount), date }]);
 
-      if (error) {
-        alert('Error al registrar: ' + error.message);
-      } else {
+      if (error) alert('Error: ' + error.message);
+      else {
         txForm.reset();
         if (txDateInput) txDateInput.value = new Date().toISOString().split('T')[0];
         cargarDatosGenerales();
@@ -49,16 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
         .from('fixed_expenses')
         .insert([{ name, amount: Math.round(amount), category: 'Fijo', status: 'pending' }]);
 
-      if (error) {
-        alert('Error al guardar gasto fijo: ' + error.message);
-      } else {
+      if (error) alert('Error: ' + error.message);
+      else {
         fixedForm.reset();
         cargarDatosGenerales();
       }
     });
   }
 
-  // Registrar / Actualizar Meta de Ahorro
+  // Registrar Meta de Ahorro
   const goalForm = document.getElementById('goal-form');
   if (goalForm) {
     goalForm.addEventListener('submit', async (e) => {
@@ -72,20 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
         .from('goals')
         .insert([{ title, target_amount: Math.round(target_amount), current_amount: Math.round(current_amount) }]);
 
-      if (error) {
-        alert('Error al actualizar meta: ' + error.message);
-      } else {
+      if (error) alert('Error: ' + error.message);
+      else {
         goalForm.reset();
         cargarDatosGenerales();
       }
     });
   }
 
-  // Botón de Reiniciar Mes
+  // Reiniciar Mes
   const resetBtn = document.getElementById('reset-month-btn');
   if (resetBtn) {
     resetBtn.addEventListener('click', async () => {
-      if (confirm('¿Estás seguro de iniciar un nuevo mes? Se borrarán los movimientos y se destildarán los fijos.')) {
+      if (confirm('¿Estás seguro de iniciar un nuevo mes? Se borrarán tus movimientos y se destildarán tus fijos.')) {
         await supabaseClient.from('transactions').delete().neq('id', 0);
         await supabaseClient.from('fixed_expenses').update({ status: 'pending' }).neq('id', 0);
         cargarDatosGenerales();
@@ -111,7 +124,7 @@ async function cargarDatosGenerales() {
 
     renderizarPanel(transactions || [], fixedExpenses || [], goals || []);
   } catch (err) {
-    console.error('Error cargando datos de Supabase:', err);
+    console.error('Error cargando datos:', err);
   }
 }
 
@@ -119,7 +132,6 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
   let totalIncome = 0;
   let totalExpense = 0;
 
-  // 1. Sumar transacciones manuales
   const movementsList = document.getElementById('movements-list');
   if (movementsList) {
     movementsList.innerHTML = '';
@@ -140,7 +152,6 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
     }
   }
 
-  // 2. Renderizar Gastos Fijos y sumar al total de gastos SOLO si están pagados
   const fixedList = document.getElementById('fixed-list');
   if (fixedList) {
     fixedList.innerHTML = '';
@@ -148,9 +159,7 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
       fixedList.innerHTML = '<li>No hay compromisos fijos.</li>';
     } else {
       fixedExpenses.forEach(fx => {
-        if (fx.status === 'paid') {
-          totalExpense += Number(fx.amount); // Se suma al gasto total del mes limpiamente
-        }
+        if (fx.status === 'paid') totalExpense += Number(fx.amount);
 
         const li = document.createElement('li');
         li.className = 'fixed-item-row';
@@ -171,7 +180,6 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
     }
   }
 
-  // Renderizar Metas
   if (goals && goals.length > 0) {
     const goal = goals[0];
     document.getElementById('goal-title-display').innerText = goal.title;
@@ -184,14 +192,12 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
     document.getElementById('goal-progress-fill').style.width = '0%';
   }
 
-  // Actualizar Balances Generales
   document.getElementById('monthly-income').innerText = `$ ${totalIncome}`;
   document.getElementById('monthly-expenses').innerText = `$ ${totalExpense}`;
   document.getElementById('current-balance').innerText = `$ ${totalIncome - totalExpense}`;
   document.getElementById('free-disposable').innerText = `$ ${totalIncome - totalExpense}`;
 }
 
-// Función global simplificada para alternar estado sin duplicar registros
 window.toggleFixed = async function(id, currentStatus) {
   const newStatus = currentStatus === 'pending' ? 'paid' : 'pending';
   await supabaseClient.from('fixed_expenses').update({ status: newStatus }).eq('id', id);
