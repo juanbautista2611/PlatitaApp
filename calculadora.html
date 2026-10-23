@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Platita - Calculadora y Vaquita</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Pantalla de carga / Transición -->
+  <div id="transition-overlay" class="page-transition-overlay">
+    <div class="loader-spinner"></div>
+    <span class="loader-text">Cargando Platita...</span>
+  </div>
+
+  <div class="app-container">
+    <main class="main-content">
+      <!-- Header Superior -->
+      <header class="top-header">
+        <div class="header-top-row">
+          <h1 class="logo-title">Calculadora</h1>
+          <div class="header-right">
+            <a href="#" onclick="cambiarPagina('app.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Volver</a>
+          </div>
+        </div>
+        <div class="welcome-block">
+          <span class="greeting-sub">Herramientas útiles</span>
+          <h2 style="font-size: 1.2rem;">División de Gastos</h2>
+        </div>
+      </header>
+
+      <!-- Calculadora de Vaquita / Amigos -->
+      <section class="card form-container-card" style="margin-bottom: 2rem;">
+        <h3>Dividir Gasto o Vaquita</h3>
+        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 1rem;">Calculá rápido cuánto le toca poner a cada persona.</p>
+        
+        <div class="futuristic-form">
+          <div class="form-row" style="margin-bottom: 0.75rem;">
+            <div style="flex: 1;">
+              <label style="font-size: 0.65rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">Monto Total ($):</label>
+              <input type="number" id="calc-total" placeholder="Ej: 45000" style="width: 100%;">
+            </div>
+            <div style="flex: 1;">
+              <label style="font-size: 0.65rem; color: #94a3b8; display: block; margin-bottom: 0.2rem;">Cantidad de Personas:</label>
+              <input type="number" id="calc-people" placeholder="Ej: 4" value="1" min="1" style="width: 100%;">
+            </div>
+          </div>
+
+          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; padding: 1rem; border-radius: 0.5rem; text-align: center; margin-top: 1rem;">
+            <span style="font-size: 0.7rem; color: #94a3b8; display: block; text-transform: uppercase; letter-spacing: 0.05em;">Le toca pagar a cada uno:</span>
+            <div id="calc-result" style="font-size: 1.6rem; font-weight: 700; color: #34d399; margin-top: 0.3rem;">$ 0</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function cambiarPagina(urlDestino) {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.add('active');
+      setTimeout(() => { window.location.href = urlDestino; }, 2000);
+    }
+
+    window.addEventListener('pageshow', () => {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.remove('active');
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const totalInput = document.getElementById('calc-total');
+      const peopleInput = document.getElementById('calc-people');
+      const resultDiv = document.getElementById('calc-result');
+
+      function calcularDivision() {
+        const total = parseFloat(totalInput.value) || 0;
+        const people = parseInt(peopleInput.value) || 1;
+        if (people <= 0) {
+          resultDiv.innerText = '$ 0';
+          return;
+        }
+        const porPersona = Math.round(total / people);
+        resultDiv.innerText = `$ ${porPersona.toLocaleString('es-AR')}`;
+      }
+
+      totalInput.addEventListener('input', calcularDivision);
+      peopleInput.addEventListener('input', calcularDivision);
+    });
+  </script>
+</body>
+</html>

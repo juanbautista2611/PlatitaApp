@@ -5,23 +5,6 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 let mainDoughnutChart = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Lógica de Modo Oscuro / Modo Claro
-  const themeToggleBtn = document.getElementById('theme-toggle-btn');
-  const currentTheme = localStorage.getItem('platita_theme') || 'dark';
-
-  if (currentTheme === 'light') {
-    document.body.classList.add('light-mode');
-    if (themeToggleBtn) themeToggleBtn.innerText = '☀️';
-  }
-
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-      document.body.classList.toggle('light-mode');
-      const isLight = document.body.classList.contains('light-mode');
-      localStorage.setItem('platita_theme', isLight ? 'light' : 'dark');
-      themeToggleBtn.innerText = isLight ? '☀️' : '🌙';
-    });
-  }
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     window.location.href = 'index.html';
@@ -220,18 +203,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         aportarAhorroForm.reset();
         alert(`¡Excelente! Se sumaron $${Math.round(montoAporte)} a tu ahorro.`);
-        cargarDatosGenerales();
-      }
-    });
-  }
-
-  // Reiniciar Mes
-  const resetBtn = document.getElementById('reset-month-btn');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', async () => {
-      if (confirm('¿Estás seguro de iniciar un nuevo mes? Se borrarán tus movimientos y se destildarán tus fijos.')) {
-        await supabaseClient.from('transactions').delete().neq('id', 0);
-        await supabaseClient.from('fixed_expenses').update({ status: 'pending' }).neq('id', 0);
         cargarDatosGenerales();
       }
     });

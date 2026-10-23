@@ -66,7 +66,7 @@
       </section>
 
       <!-- Gráfico de Estadísticas -->
-      <section class="card" style="margin-bottom: 2rem;">
+      <section class="card" style="margin-bottom: 1.25rem;">
         <h3 style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Distribución de Gastos</h3>
         <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 1rem;">Gastos del mes, fijos y vencimientos pagados (en rojo).</p>
         
@@ -74,6 +74,13 @@
           <canvas id="expensesPieChart"></canvas>
         </div>
         <div id="chart-legend-custom" style="font-size: 0.72rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.3rem;"></div>
+      </section>
+
+      <!-- Zona de Gestión / Iniciar Nuevo Mes -->
+      <section class="card" style="margin-bottom: 2rem; text-align: center;">
+        <h3 style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Zona de Gestión</h3>
+        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 1rem;">Limpiá los movimientos actuales y prepará la app para un nuevo período.</p>
+        <button id="reset-month-btn" class="btn-reset" style="width: 100%;">🔄 Iniciar Nuevo Mes</button>
       </section>
     </main>
   </div>
@@ -134,6 +141,19 @@
             if (calDateInput) calDateInput.value = new Date().toISOString().split('T')[0];
             cargarCalendario();
             cargarEstadisticasGastos();
+          }
+        });
+      }
+
+      // Lógica de Reiniciar Mes en Perfil
+      const resetBtn = document.getElementById('reset-month-btn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', async () => {
+          if (confirm('¿Estás seguro de iniciar un nuevo mes? Se borrarán tus movimientos y se destildarán tus fijos.')) {
+            await supabaseClient.from('transactions').delete().neq('id', 0);
+            await supabaseClient.from('fixed_expenses').update({ status: 'pending' }).neq('id', 0);
+            alert('¡Nuevo mes iniciado con éxito!');
+            window.location.reload();
           }
         });
       }

@@ -20,8 +20,8 @@
       <header class="top-header">
         <div class="header-top-row">
           <h1 class="logo-title">Platita</h1>
-         <div class="header-right" style="display: flex; align-items: center; gap: 0.4rem;">
-            <button id="theme-toggle-btn" title="Cambiar Tema" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; padding: 0.3rem 0.5rem; border-radius: 0.5rem; font-size: 0.75rem; cursor: pointer;">🌙</button>
+        <div class="header-right">
+            <span id="current-date-badge" class="date-badge">Cargando...</span>
             <a href="#" onclick="cambiarPagina('perfil.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Perfil</a>
             <button id="logout-btn" title="Cerrar Sesión" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; cursor: pointer;">Salir</button>
           </div>
@@ -153,8 +153,8 @@
       </section>
     </main>
 
-    <section class="card" style="margin-bottom: 1.25rem; text-align: center;">
-      <button id="reset-month-btn" class="btn-reset">🔄 Iniciar Nuevo Mes</button>
+   <section class="card" style="margin-bottom: 1.25rem; text-align: center;">
+      <button onclick="cambiarPagina('calculadora.html'); return false;" class="btn-sub" style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; width: 100%; padding: 0.75rem; font-size: 0.8rem; font-weight: 600;">🧮 Abrir Calculadora de Gastos</button>
     </section>
   </div>
 
