@@ -4,14 +4,12 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Verificar si hay usuario con sesión activa, si no, redirigir al login (index.html)
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     window.location.href = 'index.html';
     return;
   }
 
-  // Mostrar Nombre de Usuario personalizado en el saludo del header
   if (user.user_metadata && user.user_metadata.full_name) {
     const greetingSub = document.getElementById('user-greeting-sub');
     if (greetingSub) {
@@ -19,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Botón Salir / Logout
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
@@ -30,12 +27,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   actualizarFechaBadge();
 
-  const txDateInput = document.getElementById('tx-date');
-  if (txDateInput) {
-    txDateInput.value = new Date().toISOString().split('T')[0];
+  // Inicializar selector de mes con el mes actual (YYYY-MM)
+  const filterMonthInput = document.getElementById('filter-month');
+  const hoy = new Date();
+  const mesActualStr = hoy.toISOString().slice(0, 7);
+  if (filterMonthInput) {
+    filterMonthInput.value = mesActualStr;
+    filterMonthInput.addEventListener('change', () => {
+      cargarDatosGenerales();
+    });
   }
 
+  const txDateInput = document.getElementById('tx-date');
+  if (txDateInput) {
+    txDateInput.value = hoy.toISOString().split('T')[0];
+  }
+
+  await cargarCategorias();
   cargarDatosGenerales();
+
+  // Cambiar categorías según tipo (gasto/ingreso)
+  const txTypeSelect = document.getElementById('tx-type');
+  if (txTypeSelect) {
+    txTypeSelect.addEventListener('change', () => cargarCategorias());
+  }
+
+  // Crear nueva categoría personalizada
+  const categoryForm = document.getElementById('category-form');
+  if (categoryForm) {
+    categoryForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('new-cat-name').value.trim();
+      const type = document.getElementById('tx-type').value;
+
+      if (!name) return;
+
+      const { error } = await supabaseClient
+        .from('user_categories')
+        .insert([{ name, type }]);
+
+      if (error) {
+        alert('Error al crear categoría: ' + error.message);
+      } else {
+        document.getElementById('new-cat-name').value = '';
+        await cargarCategorias();
+        alert('¡Categoría creada con éxito!');
+      }
+    });
+  }
 
   // Registrar Operación Manual
   const txForm = document.getElementById('transaction-form');
@@ -46,6 +85,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const category = document.getElementById('tx-category').value;
       const amount = parseFloat(document.getElementById('tx-amount').value);
       const date = document.getElementById('tx-date').value;
+
+      if (!category) {
+        alert('Por favor seleccioná una categoría.');
+        return;
+      }
 
       const { error } = await supabaseClient
         .from('transactions')
@@ -115,6 +159,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+async function cargarCategorias() {
+  const type = document.getElementById('tx-type').value;
+  const selectCat = document.getElementById('tx-category');
+  if (!selectCat) return;
+
+  const { data: cats } = await supabaseClient
+    .from('user_categories')
+    .select('*')
+    .eq('type', type);
+
+  selectCat.innerHTML = '<option value="">Seleccioná categoría...</option>';
+  
+  // Categorías predeterminadas por defecto si el usuario no creó ninguna
+  let lista = cats || [];
+  if (lista.length === 0) {
+    lista = type === 'expense' 
+      ? [{name: 'Alimentos'}, {name: 'Servicios'}, {name: 'Transporte'}, {name: 'Entretenimiento'}]
+      : [{name: 'Sueldo'}, {name: 'Freelance'}, {name: 'Ventas'}, {name: 'Otros'}];
+  }
+
+  lista.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.name;
+    opt.innerText = c.name;
+    selectCat.appendChild(opt);
+  });
+}
+
 function actualizarFechaBadge() {
   const badge = document.getElementById('current-date-badge');
   if (badge) {
@@ -126,11 +198,18 @@ function actualizarFechaBadge() {
 
 async function cargarDatosGenerales() {
   try {
+    const filterMonthInput = document.getElementById('filter-month');
+    const selectedMonth = filterMonthInput ? filterMonthInput.value : new Date().toISOString().slice(0, 7);
+
+    // Traer transacciones ordenadas
     const { data: transactions } = await supabaseClient.from('transactions').select('*').order('date', { ascending: false });
     const { data: fixedExpenses } = await supabaseClient.from('fixed_expenses').select('*');
     const { data: goals } = await supabaseClient.from('goals').select('*');
 
-    renderizarPanel(transactions || [], fixedExpenses || [], goals || []);
+    // Filtrar transacciones según el mes seleccionado (YYYY-MM)
+    const txFiltradas = (transactions || []).filter(tx => tx.date && tx.date.startsWith(selectedMonth));
+
+    renderizarPanel(txFiltradas, fixedExpenses || [], goals || []);
   } catch (err) {
     console.error('Error cargando datos:', err);
   }
@@ -144,7 +223,7 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
   if (movementsList) {
     movementsList.innerHTML = '';
     if (transactions.length === 0) {
-      movementsList.innerHTML = '<li>No hay movimientos registrados.</li>';
+      movementsList.innerHTML = '<li>No hay movimientos registrados en este período.</li>';
     } else {
       transactions.forEach(tx => {
         if (tx.type === 'income') totalIncome += Number(tx.amount);
@@ -218,24 +297,3 @@ window.deleteFixed = async function(id) {
     cargarDatosGenerales();
   }
 };
-
-// Función global para cambiar de página con transición fluida
-function cambiarPagina(urlDestino) {
-  const overlay = document.getElementById('transition-overlay');
-  if (overlay) {
-    overlay.classList.add('active'); // Muestra la cortina negra con el spinner
-  }
-  
-  // Espera exactamente 2 segundos antes de redirigir
-  setTimeout(() => {
-    window.location.href = urlDestino;
-  }, 2000);
-}
-
-// Opcional: Efecto de entrada suave cuando la página termina de cargar
-window.addEventListener('pageshow', () => {
-  const overlay = document.getElementById('transition-overlay');
-  if (overlay) {
-    overlay.classList.remove('active');
-  }
-});
