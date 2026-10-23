@@ -15,6 +15,22 @@ function formatearDinero(monto) {
   });
 }
 
+function formatearInputMoneda(input) {
+  let valorLimpiado = input.value.replace(/\D/g, '');
+  if (valorLimpiado === '') {
+    input.value = '';
+    return;
+  }
+  let numeroFormateado = Number(valorLimpiado).toLocaleString('es-AR');
+  input.value = `$ ${numeroFormateado}`;
+}
+
+function limpiarMonto(valorString) {
+  if (!valorString) return 0;
+  let limpio = valorString.toString().replace(/\D/g, '');
+  return parseFloat(limpio) || 0;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
@@ -93,7 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     budgetForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const category_name = document.getElementById('budget-category').value;
-      const max_budget = parseFloat(document.getElementById('budget-max').value);
+      const max_budget = limpiarMonto(document.getElementById('budget-max').value);
 
       if (!category_name) {
         alert('Seleccioná una categoría.');
@@ -121,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       const type = document.getElementById('tx-type').value;
       const category = document.getElementById('tx-category').value;
-      const amount = parseFloat(document.getElementById('tx-amount').value);
+      const amount = limpiarMonto(document.getElementById('tx-amount').value);
       const date = document.getElementById('tx-date').value;
 
       if (!category) {
@@ -148,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     fixedForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('fx-name').value;
-      const amount = parseFloat(document.getElementById('fx-amount').value);
+      const amount = limpiarMonto(document.getElementById('fx-amount').value);
 
       const { error } = await supabaseClient
         .from('fixed_expenses')
@@ -168,8 +184,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     goalForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('goal-title').value;
-      const target_amount = parseFloat(document.getElementById('goal-target').value);
-      const current_amount = parseFloat(document.getElementById('goal-current').value);
+      const target_amount = limpiarMonto(document.getElementById('goal-target').value);
+      const current_amount = limpiarMonto(document.getElementById('goal-current').value);
 
       await supabaseClient.from('goals').delete().neq('id', 0);
       const { error } = await supabaseClient
@@ -189,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (aportarAhorroForm) {
     aportarAhorroForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const montoAporte = parseFloat(document.getElementById('aporte-amount').value);
+      const montoAporte = limpiarMonto(document.getElementById('aporte-amount').value);
 
       if (isNaN(montoAporte) || montoAporte <= 0) {
         alert('Ingresá un monto válido.');

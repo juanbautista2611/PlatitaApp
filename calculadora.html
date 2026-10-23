@@ -58,7 +58,7 @@
             <input type="text" id="expense-desc" placeholder="Concepto (Ej: Asado, Super, Nafta)" required style="width: 100%;">
           </div>
           <div class="form-row" style="margin-bottom: 0.4rem;">
-            <input type="number" inputmode="numeric" pattern="[0-9]*" id="expense-amount" placeholder="Monto ($)" required style="width: 100%;">
+            <input type="text" inputmode="numeric" id="expense-amount" placeholder="$ 50.000" required oninput="formatearInputMoneda(this)" style="width: 100%;">
           </div>
           <button type="submit" class="btn-sub" style="width: 100%; margin-top: 0.4rem;">Registrar Gasto</button>
         </form>
@@ -100,6 +100,22 @@
       });
     }
 
+    function formatearInputMoneda(input) {
+      let valorLimpiado = input.value.replace(/\D/g, '');
+      if (valorLimpiado === '') {
+        input.value = '';
+        return;
+      }
+      let numeroFormateado = Number(valorLimpiado).toLocaleString('es-AR');
+      input.value = `$ ${numeroFormateado}`;
+    }
+
+    function limpiarMonto(valorString) {
+      if (!valorString) return 0;
+      let limpio = valorString.toString().replace(/\D/g, '');
+      return parseFloat(limpio) || 0;
+    }
+
     function cambiarPagina(urlDestino) {
       const overlay = document.getElementById('transition-overlay');
       if (overlay) overlay.classList.add('active');
@@ -131,7 +147,7 @@
         e.preventDefault();
         const payer = document.getElementById('expense-payer').value;
         const desc = document.getElementById('expense-desc').value.trim();
-        const amount = parseFloat(document.getElementById('expense-amount').value);
+        const amount = limpiarMonto(document.getElementById('expense-amount').value);
 
         if (!payer || isNaN(amount) || amount <= 0) return;
 
