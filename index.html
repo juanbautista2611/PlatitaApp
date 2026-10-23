@@ -8,7 +8,7 @@
 </head>
 <body class="login-body">
 
-<!-- Pantalla de carga / Transición -->
+  <!-- Pantalla de carga / Transición -->
   <div id="transition-overlay" class="page-transition-overlay">
     <div class="loader-spinner"></div>
     <span class="loader-text">Cargando Platita...</span>
@@ -65,8 +65,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://dhmnbvwntcqmgwvbohdt.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24i лей...'; // Mantené tu clave anon real
-    const supabaseClient = window.supabase.createClient('https://dhmnbvwntcqmgwvbohdt.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTAxMjEsImV4cCI6MjEwODI2NjEyMX0.rho1v1cyZYlUJFXmewHL8Xhp1MxG6KqepWeHxXaJ9Pw');
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTAxMjEsImV4cCI6MjEwODI2NjEyMX0.rho1v1cyZYlUJFXmewHL8Xhp1MxG6KqepWeHxXaJ9Pw';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let isLogin = true;
     const form = document.getElementById('auth-form');
@@ -80,12 +80,21 @@
     const authPass = document.getElementById('auth-pass');
     const togglePasswordBtn = document.getElementById('toggle-password');
 
-    // Validar si ya hay sesión activa
-    supabaseClient.auth.getUser().then(({ data }) => {
-      if (data.user) window.location.href = 'bienvenida.html';
+    function cambiarPagina(urlDestino) {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.add('active');
+      setTimeout(() => { window.location.href = urlDestino; }, 2000);
+    }
+
+    window.addEventListener('pageshow', () => {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.remove('active');
     });
 
-    // Botón para ver/ocultar contraseña
+    supabaseClient.auth.getUser().then(({ data }) => {
+      if (data.user) cambiarPagina('bienvenida.html');
+    });
+
     togglePasswordBtn.addEventListener('click', () => {
       if (authPass.type === 'password') {
         authPass.type = 'text';
@@ -96,7 +105,6 @@
       }
     });
 
-    // Alternar entre Login y Registro
     btnToggle.addEventListener('click', () => {
       isLogin = !isLogin;
       if (!isLogin) {
@@ -118,7 +126,6 @@
       }
     });
 
-    // Manejar envío del formulario
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const doc = document.getElementById('auth-doc').value.trim();
@@ -128,15 +135,13 @@
       if (isLogin) {
         const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) alert('Error al ingresar: Verificá tus datos.');
-        else window.location.href = 'bienvenida.html';
+        else cambiarPagina('bienvenida.html');
       } else {
         const fullName = authName.value.trim();
         const { error } = await supabaseClient.auth.signUp({ 
           email, 
           password,
-          options: {
-            data: { full_name: fullName }
-          }
+          options: { data: { full_name: fullName } }
         });
         if (error) alert('Error al registrarse: ' + error.message);
         else {

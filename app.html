@@ -8,22 +8,21 @@
 </head>
 <body>
 
-<!-- Pantalla de carga / Transición -->
+  <!-- Pantalla de carga / Transición -->
   <div id="transition-overlay" class="page-transition-overlay">
     <div class="loader-spinner"></div>
     <span class="loader-text">Cargando Platita...</span>
   </div>
 
-
   <div class="app-container">
     <main class="main-content">
-    <!-- Header Superior -->
+      <!-- Header Superior -->
       <header class="top-header">
         <div class="header-top-row">
           <h1 class="logo-title">Platita</h1>
           <div class="header-right">
             <span id="current-date-badge" class="date-badge">Cargando...</span>
-            <a href="perfil.html" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Perfil</a>
+            <a href="#" onclick="cambiarPagina('perfil.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Perfil</a>
             <button id="logout-btn" title="Cerrar Sesión" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; cursor: pointer;">Salir</button>
           </div>
         </div>
@@ -34,7 +33,7 @@
         </div>
       </header>
 
-      <!-- Tarjeta Principal: Saldo Actual -->
+      <!-- Saldo Actual -->
       <section class="card balance-main-card">
         <div class="card-top">
           <div class="card-icon-box">
@@ -48,7 +47,7 @@
         </div>
       </section>
 
-      <!-- Cuadrícula de Métricas -->
+      <!-- Métricas -->
       <div class="metrics-grid">
         <div class="card metric-card">
           <span class="metric-title">Ingresos del mes</span>
@@ -60,7 +59,7 @@
         </div>
       </div>
 
-      <!-- Objetivo de Ahorro y Disponible -->
+      <!-- Objetivo y Disponible -->
       <div class="metrics-grid" style="margin-bottom: 1.25rem;">
         <div class="card metric-card">
           <span class="metric-title" id="goal-title-display">Ahorro objetivo</span>
@@ -73,7 +72,7 @@
         </div>
       </div>
 
-      <!-- Panel de Control Rápido (Movimientos) -->
+      <!-- Registrar Operación -->
       <section class="card form-container-card">
         <h3>Registrar Operación</h3>
         <form id="transaction-form" class="futuristic-form">
@@ -140,5 +139,16 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
+  <script>
+    function cambiarPagina(urlDestino) {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.add('active');
+      setTimeout(() => { window.location.href = urlDestino; }, 2000);
+    }
+    window.addEventListener('pageshow', () => {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.remove('active');
+    });
+  </script>
 </body>
 </html>

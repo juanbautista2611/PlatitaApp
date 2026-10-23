@@ -7,6 +7,13 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="login-body">
+
+  <!-- Pantalla de carga / Transición -->
+  <div id="transition-overlay" class="page-transition-overlay">
+    <div class="loader-spinner"></div>
+    <span class="loader-text">Cargando Platita...</span>
+  </div>
+
   <div class="app-container login-container" style="justify-content: center; align-items: center; text-align: center;">
     
     <div class="card" style="width: 100%; max-width: 400px; padding: 2.5rem 1.5rem; background: rgba(13, 18, 30, 0.85); backdrop-filter: blur(25px); border-radius: 2rem;">
@@ -16,7 +23,7 @@
 
       <span style="font-size: 0.75rem; color: #60a5fa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">Sesión Iniciada</span>
       <h1 id="welcome-user-title" style="font-size: 2rem; font-weight: 900; color: #ffffff; margin: 0.5rem 0 1rem 0;">¡Bienvenido/a!</h1>
-      <p style="font-size: 0.85_rem; color: #94a3b8; line-height: 1.4; margin-bottom: 2rem;">Todo listo para que comiences a organizar y controlar tus finanzas personales de manera inteligente.</p>
+      <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4; margin-bottom: 2rem;">Todo listo para que comiences a organizar y controlar tus finanzas personales de manera inteligente.</p>
 
       <button id="btn-go-app" class="btn-futuristic" style="width: 100%; padding: 0.9rem; font-size: 0.9rem;">Ir a mi panel financiero</button>
     </div>
@@ -29,20 +36,30 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTAxMjEsImV4cCI6MjEwODI2NjEyMX0.rho1v1cyZYlUJFXmewHL8Xhp1MxG6KqepWeHxXaJ9Pw';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    function cambiarPagina(urlDestino) {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.add('active');
+      setTimeout(() => { window.location.href = urlDestino; }, 2000);
+    }
+
+    window.addEventListener('pageshow', () => {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.remove('active');
+    });
+
     document.addEventListener('DOMContentLoaded', async () => {
       const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user) {
-        window.location.href = 'index.html';
+        cambiarPagina('index.html');
         return;
       }
 
-      // Obtener el nombre guardado en los metadatos de Supabase
       const fullName = user.user_metadata && user.user_metadata.full_name ? user.user_metadata.full_name : 'Usuario';
       document.getElementById('welcome-user-title').innerText = `¡Bienvenido/a, ${fullName}!`;
     });
 
     document.getElementById('btn-go-app').addEventListener('click', () => {
-      window.location.href = 'app.html';
+      cambiarPagina('app.html');
     });
   </script>
 </body>

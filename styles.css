@@ -510,7 +510,6 @@ body {
   pointer-events: all;
 }
 
-/* Spinner de carga minimalista */
 .loader-spinner {
   width: 40px;
   height: 40px;
