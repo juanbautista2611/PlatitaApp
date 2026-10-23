@@ -5,6 +5,23 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 let mainDoughnutChart = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Lógica de Modo Oscuro / Modo Claro
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  const currentTheme = localStorage.getItem('platita_theme') || 'dark';
+
+  if (currentTheme === 'light') {
+    document.body.classList.add('light-mode');
+    if (themeToggleBtn) themeToggleBtn.innerText = '☀️';
+  }
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      const isLight = document.body.classList.contains('light-mode');
+      localStorage.setItem('platita_theme', isLight ? 'light' : 'dark');
+      themeToggleBtn.innerText = isLight ? '☀️' : '🌙';
+    });
+  }
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     window.location.href = 'index.html';

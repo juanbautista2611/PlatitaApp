@@ -530,3 +530,44 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+
+/* --- ESTILOS PARA EL MODO CLARO --- */
+body.light-mode {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+body.light-mode .card, 
+body.light-mode .top-header, 
+body.light-mode .form-container-card,
+body.light-mode .section-box {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode h1, 
+body.light-mode h2, 
+body.light-mode h3, 
+body.light-mode strong,
+body.light-mode .logo-title {
+  color: #0f172a !important;
+}
+
+body.light-mode input, 
+body.light-mode select {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+body.light-mode input::placeholder {
+  color: #64748b;
+}
+
+body.light-mode .futuristic-movements li, 
+body.light-mode .futuristic-list li {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
