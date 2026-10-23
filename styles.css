@@ -352,11 +352,11 @@ body {
 .login-container {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start; /* Cambiado para que no se estire al fondo */
+  gap: 2rem; /* Espacio controlado entre el título y la tarjeta */
   min-height: 100vh;
-  padding: 2.5rem 1.25rem 1.5rem 1.25rem;
+  padding: 2rem 1.25rem 1.5rem 1.25rem;
 }
-
 .login-header-section {
   display: flex;
   flex-direction: column;
