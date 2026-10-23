@@ -258,7 +258,7 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
   let totalIncome = 0;
   let totalExpense = 0;
 
-  const movementsList = document.getElementById('movements-list');
+ const movementsList = document.getElementById('movements-list');
   if (movementsList) {
     movementsList.innerHTML = '';
     if (transactions.length === 0) {
@@ -269,9 +269,16 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
         else totalExpense += Number(tx.amount);
 
         const li = document.createElement('li');
+        li.className = 'fixed-item-row'; // Usamos la misma clase prolija de filas
         li.innerHTML = `
-          <span><b>${tx.category}</b> (${tx.date})</span>
-          <span class="${tx.type === 'income' ? 'income-amount' : 'expense-amount'}">${tx.type === 'income' ? '+' : '-'}$ ${tx.amount}</span>
+          <div class="fixed-info">
+            <strong>${tx.category}</strong>
+            <span style="font-size: 0.7rem; color: #94a3b8;">(${tx.date})</span>
+            <span class="${tx.type === 'income' ? 'income-amount' : 'expense-amount'}">${tx.type === 'income' ? '+' : '-'}$ ${tx.amount}</span>
+          </div>
+          <div class="fixed-actions">
+            <button class="btn-delete-fixed" onclick="deleteTransaction(${tx.id})" title="Eliminar movimiento">🗑️</button>
+          </div>
         `;
         movementsList.appendChild(li);
       });
@@ -318,10 +325,11 @@ function renderizarPanel(transactions, fixedExpenses, goals) {
     document.getElementById('goal-progress-fill').style.width = '0%';
   }
 
-  document.getElementById('monthly-income').innerText = `$ ${totalIncome}`;
+document.getElementById('monthly-income').innerText = `$ ${totalIncome}`;
   document.getElementById('monthly-expenses').innerText = `$ ${totalExpense}`;
   document.getElementById('current-balance').innerText = `$ ${totalIncome - totalExpense}`;
   document.getElementById('free-disposable').innerText = `$ ${totalIncome - totalExpense}`;
+}
 }
 
 window.toggleFixed = async function(id, currentStatus) {
@@ -334,5 +342,16 @@ window.deleteFixed = async function(id) {
   if (confirm('¿Eliminar este gasto fijo?')) {
     await supabaseClient.from('fixed_expenses').delete().eq('id', id);
     cargarDatosGenerales();
+  }
+};
+
+window.deleteTransaction = async function(id) {
+  if (confirm('¿Estás seguro de eliminar este movimiento?')) {
+    const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
+    if (error) {
+      alert('Error al eliminar: ' + error.message);
+    } else {
+      cargarDatosGenerales();
+    }
   }
 };
