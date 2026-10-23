@@ -11,6 +11,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Mostrar Nombre de Usuario personalizado en el saludo del header
+  if (user.user_metadata && user.user_metadata.full_name) {
+    const greetingSub = document.getElementById('user-greeting-sub');
+    if (greetingSub) {
+      greetingSub.innerText = `Hola, ${user.user_metadata.full_name}`;
+    }
+  }
+
   // Botón Salir / Logout
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {

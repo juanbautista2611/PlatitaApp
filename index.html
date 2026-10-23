@@ -9,7 +9,7 @@
 <body class="login-body">
   <div class="app-container login-container">
     
-    <!-- Encabezado Estilo Boceto -->
+    <!-- Encabezado -->
     <div class="login-header-section">
       <div class="login-icon-circle">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -17,7 +17,7 @@
       <h1 class="login-main-title">¡Hola soy<br><span class="highlight-platita">Platita!</span></h1>
     </div>
 
-    <!-- Tarjeta Inferior Desplegable -->
+    <!-- Tarjeta Inferior -->
     <div class="login-bottom-card">
       <div class="login-card-titles">
         <h2 id="form-title">Iniciar sesión</h2>
@@ -25,14 +25,23 @@
       </div>
 
       <form id="auth-form" class="login-form-elements">
+        <!-- Campo Nombre y Apellido (Solo visible al registrarse) -->
+        <div class="input-group" id="name-group" style="display: none;">
+          <label>Nombre y Apellido</label>
+          <input type="text" id="auth-name" placeholder="Ej: Juan Romiti">
+        </div>
+
         <div class="input-group">
           <label>DNI</label>
-          <input type="text" id="auth-doc" placeholder="Ej: 12345678" required>
+          <input type="text" id="auth-doc" placeholder="Ej: 41656140" required>
         </div>
         
         <div class="input-group">
           <label>Contraseña</label>
-          <input type="password" id="auth-pass" placeholder="Tu contraseña" required>
+          <div style="position: relative; display: flex; align-items: center;">
+            <input type="password" id="auth-pass" placeholder="Tu contraseña" required style="width: 100%; padding-right: 2.5rem;">
+            <button type="button" id="toggle-password" style="position: absolute; right: 0.75rem; background: transparent; border: none; cursor: pointer; color: #475569; font-size: 0.85rem;" title="Ver contraseña">👁️</button>
+          </div>
         </div>
         
         <button type="submit" id="btn-submit" class="btn-login-action">Iniciar sesión</button>
@@ -49,8 +58,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://dhmnbvwntcqmgwvbohdt.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTAxMjEsImV4cCI6MjEwODI2NjEyMX0.rho1v1cyZYlUJFXmewHL8Xhp1MxG6KqepWeHxXaJ9Pw';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24i лей...'; // Mantené tu clave anon real
+    const supabaseClient = window.supabase.createClient('https://dhmnbvwntcqmgwvbohdt.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTAxMjEsImV4cCI6MjEwODI2NjEyMX0.rho1v1cyZYlUJFXmewHL8Xhp1MxG6KqepWeHxXaJ9Pw');
 
     let isLogin = true;
     const form = document.getElementById('auth-form');
@@ -59,33 +68,69 @@
     const formTitle = document.getElementById('form-title');
     const formSubtitle = document.getElementById('form-subtitle');
     const toggleText = document.getElementById('toggle-text');
+    const nameGroup = document.getElementById('name-group');
+    const authName = document.getElementById('auth-name');
+    const authPass = document.getElementById('auth-pass');
+    const togglePasswordBtn = document.getElementById('toggle-password');
 
-    // Si ya hay sesión activa, redirigir al panel
+    // Validar si ya hay sesión activa
     supabaseClient.auth.getUser().then(({ data }) => {
-      if (data.user) window.location.href = 'app.html';
+      if (data.user) window.location.href = 'bienvenida.html';
     });
 
+    // Botón para ver/ocultar contraseña
+    togglePasswordBtn.addEventListener('click', () => {
+      if (authPass.type === 'password') {
+        authPass.type = 'text';
+        togglePasswordBtn.innerText = '🙈';
+      } else {
+        authPass.type = 'password';
+        togglePasswordBtn.innerText = '👁️';
+      }
+    });
+
+    // Alternar entre Login y Registro
     btnToggle.addEventListener('click', () => {
       isLogin = !isLogin;
-      formTitle.innerText = isLogin ? 'Iniciar sesión' : 'Crear cuenta';
-      formSubtitle.innerText = isLogin ? 'Ingresá con tu DNI y contraseña' : 'Registrate con tu DNI y una clave';
-      btnSubmit.innerText = isLogin ? 'Iniciar sesión' : 'Registrarse';
-      toggleText.innerText = isLogin ? '¿No tenés cuenta?' : '¿Ya tenés cuenta?';
-      btnToggle.innerText = isLogin ? 'Registrate' : 'Ingresá';
+      if (!isLogin) {
+        formTitle.innerText = 'Crear cuenta';
+        formSubtitle.innerText = 'Completá tus datos para registrarte';
+        btnSubmit.innerText = 'Registrarse';
+        toggleText.innerText = '¿Ya tenés cuenta?';
+        btnToggle.innerText = 'Ingresá';
+        nameGroup.style.display = 'flex';
+        authName.setAttribute('required', 'true');
+      } else {
+        formTitle.innerText = 'Iniciar sesión';
+        formSubtitle.innerText = 'Ingresá con tu DNI y contraseña';
+        btnSubmit.innerText = 'Iniciar sesión';
+        toggleText.innerText = '¿No tenés cuenta?';
+        btnToggle.innerText = 'Registrate';
+        nameGroup.style.display = 'none';
+        authName.removeAttribute('required');
+      }
     });
 
+    // Manejar envío del formulario
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const doc = document.getElementById('auth-doc').value.trim();
-      const password = document.getElementById('auth-pass').value.trim();
+      const password = authPass.value.trim();
       const email = `${doc}@platita.app`;
 
       if (isLogin) {
         const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) alert('Error al ingresar: Verificá tus datos.');
-        else window.location.href = 'app.html';
+        else window.location.href = 'bienvenida.html';
       } else {
-        const { error } = await supabaseClient.auth.signUp({ email, password });
+        const fullName = authName.value.trim();
+        const { error } = await supabaseClient.auth.signUp({ 
+          email, 
+          password,
+          options: {
+            data: { full_name: fullName }
+          }
+        });
         if (error) alert('Error al registrarse: ' + error.message);
         else {
           alert('¡Cuenta creada con éxito! Ya podés iniciar sesión.');
@@ -95,6 +140,8 @@
           btnSubmit.innerText = 'Iniciar sesión';
           toggleText.innerText = '¿No tenés cuenta?';
           btnToggle.innerText = 'Registrate';
+          nameGroup.style.display = 'none';
+          authName.removeAttribute('required');
           form.reset();
         }
       }

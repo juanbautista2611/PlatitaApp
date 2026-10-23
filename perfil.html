@@ -56,7 +56,7 @@
     </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://dhmnbvwntcqmgwvbohdt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTAxMjEsImV4cCI6MjEwODI2NjEyMX0.rho1v1cyZYlUJFXmewHL8Xhp1MxG6KqepWeHxXaJ9Pw';
@@ -81,25 +81,39 @@
 
     async function cargarEstadisticasGastos() {
       try {
-        // Traer todas las transacciones del usuario actual
-        const { data: transactions, error } = await supabaseClient
+        // 1. Traer transacciones manuales del usuario
+        const { data: transactions, error: txError } = await supabaseClient
           .from('transactions')
           .select('*');
 
-        if (error) {
-          console.error('Error cargando transacciones:', error);
+        // 2. Traer gastos fijos del usuario
+        const { data: fixedExpenses, error: fxError } = await supabaseClient
+          .from('fixed_expenses')
+          .select('*');
+
+        if (txError || fxError) {
+          console.error('Error cargando datos para estadísticas:', txError || fxError);
           return;
         }
 
-        // Filtrar estrictamente los gastos (type === 'expense')
-        const gastos = transactions ? transactions.filter(tx => tx.type === 'expense') : [];
-
-        // Agrupar gastos por categoría
         const categorias = {};
-        gastos.forEach(tx => {
-          const cat = tx.category ? tx.category.trim() : 'General';
-          categorias[cat] = (categorias[cat] || 0) + Number(tx.amount);
-        });
+
+        // Procesar transacciones (filtrar estrictamente gastos)
+        if (transactions) {
+          transactions.filter(tx => tx.type === 'expense').forEach(tx => {
+            const cat = tx.category ? tx.category.trim() : 'General';
+            categorias[cat] = (categorias[cat] || 0) + Number(tx.amount);
+          });
+        }
+
+        // Procesar gastos fijos QUE YA ESTÉN PAGADOS (status === 'paid')
+        if (fixedExpenses) {
+          fixedExpenses.filter(fx => fx.status === 'paid').forEach(fx => {
+            // Los marcamos con un prefijo o los sumamos directo a su categoría/nombre en rojo
+            const cat = `Fijo: ${fx.name.trim()}`;
+            categorias[cat] = (categorias[cat] || 0) + Number(fx.amount);
+          });
+        }
 
         const labels = Object.keys(categorias);
         const dataValues = Object.values(categorias);
@@ -117,17 +131,22 @@
       const legendContainer = document.getElementById('chart-legend-custom');
 
       if (labels.length === 0) {
-        legendContainer.innerHTML = '<span style="text-align:center; color:#64748b; display:block; padding: 1rem;">No hay gastos registrados todavía para mostrar estadísticas.</span>';
+        legendContainer.innerHTML = '<span style="text-align:center; color:#64748b; display:block; padding: 1rem;">No hay gastos ni compromisos pagados todavía.</span>';
         if (myChart) myChart.destroy();
         return;
       }
 
-      legendContainer.innerHTML = ''; // Limpiar mensaje previo
+      legendContainer.innerHTML = '';
 
-      // Colores futuristas para las porciones
-      const backgroundColors = [
-        '#3b82f6', '#34d399', '#f87171', '#c084fc', '#fbbf24', '#38bdf8', '#fb7185'
-      ];
+      // Generar colores: si la etiqueta empieza con "Fijo:", forzamos un color rojo (#f87171), sino usamos la gama futurista
+      const backgroundColors = labels.map(label => {
+        if (label.startsWith('Fijo:')) {
+          return '#f87171'; // Rojo exacto para gastos fijos pagados
+        }
+        // Colores para el resto de categorías normales
+        const palette = ['#3b82f6', '#34d399', '#c084fc', '#fbbf24', '#38bdf8', '#fb7185'];
+        return palette[Math.floor(Math.random() * palette.length)];
+      });
 
       if (myChart) myChart.destroy();
 
@@ -137,7 +156,7 @@
           labels: labels,
           datasets: [{
             data: dataValues,
-            backgroundColor: backgroundColors.slice(0, labels.length),
+            backgroundColor: backgroundColors,
             borderWidth: 0
           }]
         },
