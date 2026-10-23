@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Platita - Mi Perfil y Estadísticas</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js para el gráfico de tortas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <main class="main-content">
+      <!-- Header Superior -->
+      <header class="top-header">
+        <div class="header-top-row">
+          <h1 class="logo-title">Mi Perfil</h1>
+          <div class="header-right">
+            <a href="app.html" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Volver</a>
+          </div>
+        </div>
+        <div class="welcome-block">
+          <span class="greeting-sub">Cuenta vinculada</span>
+          <h2 id="user-dni-display" style="font-size: 1.3rem;">Cargando usuario...</h2>
+        </div>
+      </header>
+
+      <!-- Tarjeta de Datos Personales -->
+      <section class="card" style="margin-bottom: 1.25rem;">
+        <h3 style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Información de la Cuenta</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.75rem; color: #94a3b8;">
+          <div style="display: flex; justify-content: space-between; background: rgba(7, 10, 17, 0.5); padding: 0.6rem; border-radius: 0.5rem;">
+            <span>Método de Acceso:</span>
+            <strong style="color: #f1f5f9;">Documento de Identidad (DNI)</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; background: rgba(7, 10, 17, 0.5); padding: 0.6rem; border-radius: 0.5rem;">
+            <span>Estado de Seguridad:</span>
+            <strong style="color: #34d399;">Protegido y Privado (RLS)</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Estadísticas y Gráfico de Gastos -->
+      <section class="card" style="margin-bottom: 2rem;">
+        <h3 style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Distribución de Gastos</h3>
+        <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 1rem;">Gastos agrupados por categoría en el mes actual.</p>
+        
+        <div style="position: relative; width: 100%; max-width: 260px; margin: 0 auto 1rem auto;">
+          <canvas id="expensesPieChart"></canvas>
+        </div>
+        
+        <div id="chart-legend-custom" style="font-size: 0.72rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.3rem;">
+          <!-- Leyenda dinámica -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://dhmnbvwntcqmgwvbohdt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRobW5idndudGNxbWd3dmJvaGR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTAxMjEsImV4cCI6MjEwODI2NjEyMX0.rho1v1cyZYlUJFXmewHL8Xhp1MxG6KqepWeHxXaJ9Pw';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let myChart = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Validar sesión
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Extraer DNI del email interno (ej: 41656140@platita.app -> 41656140)
+      const dni = user.email ? user.email.split('@')[0] : 'Desconocido';
+      document.getElementById('user-dni-display').innerText = `DNI: ${dni}`;
+
+      cargarEstadisticasGastos();
+    });
+
+    async function cargarEstadisticasGastos() {
+      try {
+        // Traer transacciones de tipo gasto del usuario
+        const { data: transactions, error } = await supabaseClient
+          .from('transactions')
+          .select('*')
+          .eq('type', 'expense');
+
+        if (error) {
+          console.error('Error cargando transacciones:', error);
+          return;
+        }
+
+        // Agrupar gastos por categoría
+        const categorias = {};
+        if (transactions) {
+          transactions.forEach(tx => {
+            const cat = tx.category.trim();
+            categorias[cat] = (categorias[cat] || 0) + Number(tx.amount);
+          });
+        }
+
+        const labels = Object.keys(categorias);
+        const dataValues = Object.values(categorias);
+
+        renderizarGraficoTorta(labels, dataValues);
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    function renderizarGraficoTorta(labels, dataValues) {
+      const ctx = document.getElementById('expensesPieChart').getContext('2d');
+
+      if (labels.length === 0) {
+        document.getElementById('chart-legend-custom').innerHTML = '<span style="text-align:center; color:#64748b;">No hay gastos registrados para graficar.</span>';
+        return;
+      }
+
+      // Colores futuristas para el gráfico
+      const backgroundColors = [
+        '#3b82f6', '#34d399', '#f87171', '#c084fc', '#fbbf24', '#38bdf8', '#fb7185'
+      ];
+
+      if (myChart) myChart.destroy();
+
+      myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataValues,
+            backgroundColor: backgroundColors.slice(0, labels.length),
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#94a3b8',
+                font: { size: 11 }
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
