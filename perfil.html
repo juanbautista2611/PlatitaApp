@@ -72,7 +72,7 @@
         return;
       }
 
-      // Extraer DNI del email interno (ej: 41656140@platita.app -> 41656140)
+      // Extraer DNI del email interno
       const dni = user.email ? user.email.split('@')[0] : 'Desconocido';
       document.getElementById('user-dni-display').innerText = `DNI: ${dni}`;
 
@@ -81,44 +81,50 @@
 
     async function cargarEstadisticasGastos() {
       try {
-        // Traer transacciones de tipo gasto del usuario
+        // Traer todas las transacciones del usuario actual
         const { data: transactions, error } = await supabaseClient
           .from('transactions')
-          .select('*')
-          .eq('type', 'expense');
+          .select('*');
 
         if (error) {
           console.error('Error cargando transacciones:', error);
           return;
         }
 
+        // Filtrar estrictamente los gastos (type === 'expense')
+        const gastos = transactions ? transactions.filter(tx => tx.type === 'expense') : [];
+
         // Agrupar gastos por categoría
         const categorias = {};
-        if (transactions) {
-          transactions.forEach(tx => {
-            const cat = tx.category.trim();
-            categorias[cat] = (categorias[cat] || 0) + Number(tx.amount);
-          });
-        }
+        gastos.forEach(tx => {
+          const cat = tx.category ? tx.category.trim() : 'General';
+          categorias[cat] = (categorias[cat] || 0) + Number(tx.amount);
+        });
 
         const labels = Object.keys(categorias);
         const dataValues = Object.values(categorias);
 
         renderizarGraficoTorta(labels, dataValues);
       } catch (err) {
-        console.error('Error:', err);
+        console.error('Error procesando estadísticas:', err);
       }
     }
 
     function renderizarGraficoTorta(labels, dataValues) {
-      const ctx = document.getElementById('expensesPieChart').getContext('2d');
+      const canvasElement = document.getElementById('expensesPieChart');
+      if (!canvasElement) return;
+      const ctx = canvasElement.getContext('2d');
+      const legendContainer = document.getElementById('chart-legend-custom');
 
       if (labels.length === 0) {
-        document.getElementById('chart-legend-custom').innerHTML = '<span style="text-align:center; color:#64748b;">No hay gastos registrados para graficar.</span>';
+        legendContainer.innerHTML = '<span style="text-align:center; color:#64748b; display:block; padding: 1rem;">No hay gastos registrados todavía para mostrar estadísticas.</span>';
+        if (myChart) myChart.destroy();
         return;
       }
 
-      // Colores futuristas para el gráfico
+      legendContainer.innerHTML = ''; // Limpiar mensaje previo
+
+      // Colores futuristas para las porciones
       const backgroundColors = [
         '#3b82f6', '#34d399', '#f87171', '#c084fc', '#fbbf24', '#38bdf8', '#fb7185'
       ];
@@ -142,7 +148,8 @@
               position: 'bottom',
               labels: {
                 color: '#94a3b8',
-                font: { size: 11 }
+                font: { size: 11 },
+                boxWidth: 12
               }
             }
           }
