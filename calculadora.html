@@ -227,7 +227,9 @@
 
     function reclamarWhatsApp(deudor, acreedor, monto) {
       const acreedorObj = integrantes.find(p => p.nombre === acreedor);
-      const aliasTexto = acreedorObj && acreedorObj.alias !== 'Sin alias' ? ` (Alias: ${acreedorObj.alias})` : '';
+      const aliasValor = acreedorObj ? acreedorObj.alias : 'Sin alias';
+      // Usamos comillas invertidas ` para que WhatsApp lo destaque y sea copiable al toque
+      const aliasTexto = aliasValor !== 'Sin alias' ? ` (Alias: \`${aliasValor}\`)` : '';
       const texto = `Hola ${deudor}! 👋 Te escribo porque quedaron pendientes ${formatearDinero(monto)} de la juntadita para ${acreedor}${aliasTexto}. ¡Avisame cuando puedas transferir! 🍻`;
       const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
       window.open(url, '_blank');
@@ -370,7 +372,7 @@
 
     function compartirWhatsAppVaquita() {
       let texto = `🍻 *RESUMEN DE LA JUNTADITA - PLATITA* 🍻\n\n`;
-      texto += `👥 *Integrantes:* ${integrantes.map(p => `${p.emoji} ${p.nombre}`).join(', ')}\n`;
+      texto += `👥 *Integrantes:* ${integrantes.map(p => `${p.emoji} ${p.nombre} (${p.alias})`).join(', ')}\n`;
       texto += `💰 *Gasto Total:* ${document.getElementById('total-vaquita-amount').innerText}\n\n`;
       texto += `📝 *Detalle de Gastos:* \n`;
       
@@ -380,7 +382,11 @@
 
       texto += `\n💸 *CÓMO SALDAR CUENTAS:*\n`;
       ultimasTransaccionesCalculadas.forEach(t => {
-        texto += `👉 *${t.de}* le debe a *${t.a}* ➔ *${formatearDinero(t.monto)}*\n`;
+        const acreedorObj = integrantes.find(p => p.nombre === t.a);
+        const aliasAcreedor = acreedorObj ? acreedorObj.alias : 'Sin alias';
+        // Alias destacado con comillas invertidas en el resumen general también
+        const aliasStr = aliasAcreedor !== 'Sin alias' ? ` (Alias: \`${aliasAcreedor}\`)` : '';
+        texto += `👉 *${t.de}* le debe a *${t.a}* ➔ *${formatearDinero(t.monto)}* ${aliasStr}\n`;
       });
 
       texto += `\n✨ _Calculado con Platita App_`;
