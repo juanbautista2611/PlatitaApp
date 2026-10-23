@@ -5,6 +5,16 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 let mainDoughnutChart = null;
 let dailyTrendChart = null;
 
+function formatearDinero(monto) {
+  if (isNaN(monto) || monto === null) return '$ 0';
+  return Number(monto).toLocaleString('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
@@ -204,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Error al actualizar el ahorro: ' + updateError.message);
       } else {
         aportarAhorroForm.reset();
-        alert(`¡Excelente! Se sumaron $${Math.round(montoAporte)} a tu ahorro.`);
+        alert(`¡Excelente! Se sumaron ${formatearDinero(montoAporte)} a tu ahorro.`);
         cargarDatosGenerales();
       }
     });
@@ -229,7 +239,6 @@ async function verificarAlertasVencimientos() {
     const vencDate = new Date(ev.due_date);
     const diffTime = vencDate - hoyDate;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    // Alerta si vence hoy (0), ya venció (< 0) o vence en los próximos 4 días (<= 4)
     return diffDays <= 4;
   });
 
@@ -244,7 +253,7 @@ async function verificarAlertasVencimientos() {
     const row = document.createElement('div');
     row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.4); padding: 0.4rem 0.6rem; border-radius: 0.3rem;';
     row.innerHTML = `
-      <span><strong>${ev.title}</strong> ($ ${ev.amount})</span>
+      <span><strong>${ev.title}</strong> (${formatearDinero(ev.amount)})</span>
       <span style="color: #f87171; font-weight: 600;">Vence: ${ev.due_date}</span>
     `;
     container.appendChild(row);
@@ -340,8 +349,7 @@ function renderizarPanel(transactions, fixedExpenses, goals, budgets, selectedMo
           const cat = tx.category.trim();
           gastosPorCategoria[cat] = (gastosPorCategoria[cat] || 0) + Number(tx.amount);
 
-          // Agrupar por día para el gráfico de líneas
-          const dia = tx.date; // formato YYYY-MM-DD
+          const dia = tx.date;
           gastosDiarios[dia] = (gastosDiarios[dia] || 0) + Number(tx.amount);
         }
 
@@ -351,7 +359,7 @@ function renderizarPanel(transactions, fixedExpenses, goals, budgets, selectedMo
           <div class="fixed-info">
             <strong>${tx.category}</strong>
             <span style="font-size: 0.7rem; color: #94a3b8;">(${tx.date})</span>
-            <span class="${tx.type === 'income' ? 'income-amount' : 'expense-amount'}">${tx.type === 'income' ? '+' : '-'}$ ${tx.amount}</span>
+            <span class="${tx.type === 'income' ? 'income-amount' : 'expense-amount'}">${tx.type === 'income' ? '+' : '-'}${formatearDinero(tx.amount)}</span>
           </div>
           <div class="fixed-actions">
             <button class="btn-delete-fixed" onclick="deleteTransaction(${tx.id})" title="Eliminar movimiento">🗑️</button>
@@ -379,7 +387,7 @@ function renderizarPanel(transactions, fixedExpenses, goals, budgets, selectedMo
         li.innerHTML = `
           <div class="fixed-info">
             <strong>${fx.name}</strong>
-            <span class="${fx.status === 'paid' ? 'expense-amount-green' : 'expense-amount-red'}">$ ${fx.amount}</span>
+            <span class="${fx.status === 'paid' ? 'expense-amount-green' : 'expense-amount-red'}">${formatearDinero(fx.amount)}</span>
           </div>
           <div class="fixed-actions">
             <button class="${fx.status === 'pending' ? 'badge-pending' : 'badge-paid'}" onclick="toggleFixed(${fx.id}, '${fx.status}')">
@@ -396,7 +404,7 @@ function renderizarPanel(transactions, fixedExpenses, goals, budgets, selectedMo
   if (goals && goals.length > 0) {
     const goal = goals[0];
     document.getElementById('goal-title-display').innerText = goal.title;
-    document.getElementById('goal-amount-display').innerText = `$ ${goal.current_amount} / ${goal.target_amount}`;
+    document.getElementById('goal-amount-display').innerText = `${formatearDinero(goal.current_amount)} / ${formatearDinero(goal.target_amount)}`;
     const percent = Math.min(100, Math.round((goal.current_amount / goal.target_amount) * 100) || 0);
     document.getElementById('goal-progress-fill').style.width = `${percent}%`;
   } else {
@@ -405,10 +413,10 @@ function renderizarPanel(transactions, fixedExpenses, goals, budgets, selectedMo
     document.getElementById('goal-progress-fill').style.width = '0%';
   }
 
-  document.getElementById('monthly-income').innerText = `$ ${totalIncome}`;
-  document.getElementById('monthly-expenses').innerText = `$ ${totalExpense}`;
-  document.getElementById('current-balance').innerText = `$ ${totalIncome - totalExpense}`;
-  document.getElementById('free-disposable').innerText = `$ ${totalIncome - totalExpense}`;
+  document.getElementById('monthly-income').innerText = formatearDinero(totalIncome);
+  document.getElementById('monthly-expenses').innerText = formatearDinero(totalExpense);
+  document.getElementById('current-balance').innerText = formatearDinero(totalIncome - totalExpense);
+  document.getElementById('free-disposable').innerText = formatearDinero(totalIncome - totalExpense);
 
   renderizarGraficoCategorias(gastosPorCategoria, budgets || []);
   renderizarGraficoTendenciaDiaria(gastosDiarios, selectedMonth);
@@ -435,20 +443,20 @@ function renderizarGraficoCategorias(gastosMap, budgets) {
     const gastado = gastosMap[cat];
     const presupuestoObj = budgets.find(b => b.category_name === cat);
     
-    let estadoTexto = `$ ${gastado} gastados`;
+    let estadoTexto = `${formatearDinero(gastado)} gastados`;
     let colorTexto = '#94a3b8';
 
     if (presupuestoObj) {
       const limite = presupuestoObj.max_budget;
       const porcentaje = (gastado / limite) * 100;
       if (porcentaje >= 100) {
-        estadoTexto = `$ ${gastado} / $ ${limite} (⚠️ ¡Límite superado!)`;
+        estadoTexto = `${formatearDinero(gastado)} / ${formatearDinero(limite)} (⚠️ ¡Límite superado!)`;
         colorTexto = '#f87171';
       } else if (porcentaje >= 80) {
-        estadoTexto = `$ ${gastado} / $ ${limite} (⚡ Cerca del límite)`;
+        estadoTexto = `${formatearDinero(gastado)} / ${formatearDinero(limite)} (⚡ Cerca del límite)`;
         colorTexto = '#fbbf24';
       } else {
-        estadoTexto = `$ ${gastado} / $ ${limite} (Restan $ ${limite - gastado})`;
+        estadoTexto = `${formatearDinero(gastado)} / ${formatearDinero(limite)} (Restan ${formatearDinero(limite - gastado)})`;
         colorTexto = '#34d399';
       }
     }
@@ -496,7 +504,6 @@ function renderizarGraficoTendenciaDiaria(gastosDiariosMap, selectedMonth) {
 
   const ctx = canvasElement.getContext('2d');
 
-  // Obtener días del mes seleccionado (ej: '2026-06')
   const [anio, mes] = selectedMonth.split('-');
   const diasEnMes = new Date(anio, mes, 0).getDate();
 
@@ -506,7 +513,6 @@ function renderizarGraficoTendenciaDiaria(gastosDiariosMap, selectedMonth) {
 
   for (let d = 1; d <= diasEnMes; d++) {
     const diaStr = `${selectedMonth}-${String(d).padStart(2, '0')}`;
-    labels.value = d;
     labels.push(d);
     
     if (gastosDiariosMap[diaStr]) {
