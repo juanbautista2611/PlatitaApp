@@ -65,30 +65,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Presupuesto
-  const budgetForm = document.getElementById('budget-form');
-  if (budgetForm) {
-    budgetForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const category_name = document.getElementById('budget-category').value;
-      const max_budget = limpiarMonto(document.getElementById('budget-max').value);
-
-      if (!category_name) {
-        alert('Seleccioná una categoría.');
-        return;
-      }
-
-      await supabaseClient.from('category_budgets').delete().eq('category_name', category_name);
-      const { error } = await supabaseClient.from('category_budgets').insert([{ category_name, max_budget: Math.round(max_budget) }]);
-
-      if (error) alert('Error: ' + error.message);
-      else {
-        budgetForm.reset();
-        alert('¡Presupuesto fijado!');
-      }
-    });
-  }
-
   // Registrar Operación
   const txForm = document.getElementById('transaction-form');
   if (txForm) {
@@ -178,7 +154,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function cargarCategorias() {
   const type = document.getElementById('tx-type').value;
   const selectCat = document.getElementById('tx-category');
-  const selectBudgetCat = document.getElementById('budget-category');
 
   const { data: cats } = await supabaseClient.from('user_categories').select('*').eq('type', type);
   let lista = cats || [];
@@ -195,20 +170,6 @@ async function cargarCategorias() {
       opt.value = c.name;
       opt.innerText = c.name;
       selectCat.appendChild(opt);
-    });
-  }
-
-  if (selectBudgetCat) {
-    const { data: expenseCats } = await supabaseClient.from('user_categories').select('*').eq('type', 'expense');
-    let listaExp = expenseCats || [];
-    if (listaExp.length === 0) listaExp = [{name: 'Alimentos'}, {name: 'Servicios'}, {name: 'Transporte'}, {name: 'Entretenimiento'}];
-
-    selectBudgetCat.innerHTML = '<option value="">Seleccionar categoría de gasto...</option>';
-    listaExp.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.name;
-      opt.innerText = c.name;
-      selectBudgetCat.appendChild(opt);
     });
   }
 }
@@ -233,12 +194,21 @@ async function cargarCompromisosFijos() {
         <span class="${fx.status === 'paid' ? 'expense-amount-green' : 'expense-amount-red'}">${formatearDinero(fx.amount)}</span>
       </div>
       <div class="fixed-actions">
+        <button class="${fx.status === 'pending' ? 'badge-pending' : 'badge-paid'}" onclick="toggleFixed(${fx.id}, '${fx.status}')">
+          ${fx.status === 'pending' ? 'Pagar' : 'Pagado'}
+        </button>
         <button class="btn-delete-fixed" onclick="deleteFixed(${fx.id})">🗑️</button>
       </div>
     `;
     fixedList.appendChild(li);
   });
 }
+
+window.toggleFixed = async function(id, currentStatus) {
+  const newStatus = currentStatus === 'pending' ? 'paid' : 'pending';
+  await supabaseClient.from('fixed_expenses').update({ status: newStatus }).eq('id', id);
+  cargarCompromisosFijos();
+};
 
 window.deleteFixed = async function(id) {
   if (confirm('¿Eliminar este gasto fijo?')) {

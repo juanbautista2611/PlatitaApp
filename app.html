@@ -10,7 +10,7 @@
 </head>
 <body>
 
-  <!-- Pantalla de carga / Transition -->
+  <!-- Pantalla de carga / Transición -->
   <div id="transition-overlay" class="page-transition-overlay">
     <div class="loader-spinner"></div>
     <span class="loader-text">Cargando Platita...</span>
@@ -41,7 +41,7 @@
         </div>
       </header>
 
-      <!-- Botón Flotante / Destacado para Ir a Cargar y Gestionar -->
+      <!-- Botón Destacado para Ir a Cargar -->
       <section style="margin-bottom: 1.25rem;">
         <button onclick="cambiarPagina('gestion.html'); return false;" style="width: 100%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: none; color: #ffffff; padding: 0.85rem; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
           <span>➕ Ir a Cargar Gastos, Ingresos y Fijos</span>
@@ -71,17 +71,25 @@
         </div>
       </section>
 
-      <!-- Métricas (Ingresos y Gastos Grandes) -->
-      <div class="metrics-grid" style="margin-bottom: 1.25rem;">
-        <div class="card metric-card" style="padding: 1rem;">
-          <span class="metric-title" style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">📥 Ingresos del mes</span>
-          <div class="metric-amount" id="monthly-income" style="font-size: 1.3rem; font-weight: 700; color: #34d399; margin-top: 0.3rem;">$ 0</div>
+      <!-- SECCIÓN DE SUELDO / INGRESOS RÁPIDO (Directo debajo del saldo) -->
+      <section class="card" style="margin-bottom: 1.25rem; padding: 1.25rem; background: rgba(52, 211, 153, 0.05); border: 1px solid rgba(52, 211, 153, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <span style="font-size: 0.75rem; color: #34d399; font-weight: 700; text-transform: uppercase;">💵 Ingresos / Sueldo del Mes</span>
+            <div id="monthly-income" style="font-size: 1.6rem; font-weight: 800; color: #34d399; margin-top: 0.1rem;">$ 0</div>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 0.7rem; color: #94a3b8; display: block;">Gastos del mes</span>
+            <span id="monthly-expenses" style="font-size: 1.1rem; font-weight: 700; color: #f87171;">$ 0</span>
+          </div>
         </div>
-        <div class="card metric-card" style="padding: 1rem;">
-          <span class="metric-title" style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">📤 Gastos del mes</span>
-          <div class="metric-amount" id="monthly-expenses" style="font-size: 1.3rem; font-weight: 700; color: #f87171; margin-top: 0.3rem;">$ 0</div>
-        </div>
-      </div>
+        
+        <!-- Formulario rápido de ingreso / sueldo -->
+        <form id="quick-income-form" style="display: flex; gap: 0.4rem; border-top: 1px solid rgba(52, 211, 153, 0.2); padding-top: 0.75rem; margin-top: 0.5rem;">
+          <input type="text" inputmode="numeric" id="quick-income-amount" placeholder="Cargar Sueldo/Ingreso ($)" required oninput="formatearInputMoneda(this)" style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.5rem; border-radius: 0.4rem; font-size: 0.8rem;">
+          <button type="submit" style="background: #34d399; border: none; color: #05070b; padding: 0.5rem 0.8rem; border-radius: 0.4rem; font-size: 0.75rem; font-weight: 700; cursor: pointer;">+ Cargar Sueldo</button>
+        </form>
+      </section>
 
       <!-- Objetivo de Ahorro -->
       <div class="card" style="margin-bottom: 1.25rem; padding: 1.25rem;">
