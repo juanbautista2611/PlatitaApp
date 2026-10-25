@@ -5,6 +5,82 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Platita - Anotador de Truco</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Estilos específicos para los atados de truco visuales */
+    .truco-board-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+    .team-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid #334155;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .section-title-truco {
+      font-size: 0.65rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.5rem;
+      margin-bottom: 0.3rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding-bottom: 0.15rem;
+    }
+    .blocks-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      justify-content: center;
+      min-height: 55px;
+      align-items: center;
+      padding: 0.2rem;
+    }
+    /* Estilo del bloque de 5 (cuadrado tachado) */
+    .truco-block {
+      width: 32px;
+      height: 32px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+      position: relative;
+      background: rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .truco-block.completed {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
+    }
+    /* Línea diagonal cruzada del cuadrado */
+    .truco-block.completed::after {
+      content: '';
+      position: absolute;
+      width: 140%;
+      height: 2px;
+      background-color: #38bdf8;
+      transform: rotate(-45deg);
+    }
+    /* Palitos sueltos (1 al 4) */
+    .loose-sticks {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      height: 32px;
+    }
+    .stick {
+      width: 3px;
+      height: 24px;
+      background-color: #cbd5e1;
+      border-radius: 2px;
+    }
+  </style>
 </head>
 <body>
 
@@ -21,7 +97,8 @@
         <div class="header-top-row">
           <h1 class="logo-title">🃏 Anotador de Truco</h1>
           <div class="header-right">
-<a href="#" onclick="cambiarPagina('calculadora.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Volver</a>          </div>
+            <a href="#" onclick="cambiarPagina('calculadora.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Volver</a>
+          </div>
         </div>
         <div class="welcome-block">
           <span class="greeting-sub">Chismes, mentiras y envido</span>
@@ -34,15 +111,21 @@
         <button onclick="reiniciarTruco()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.3rem 0.6rem; border-radius: 0.4rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">🔄 Nueva Partida</button>
       </section>
 
-      <!-- Tablero de Anotación -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 2rem;">
+      <!-- Tablero de Anotación Visual -->
+      <div class="truco-board-grid">
         
         <!-- EQUIPO 1 -->
-        <div class="card" style="padding: 1rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="team-card">
           <div>
-            <input type="text" id="eq1-nombre" value="Nosotros" onchange="guardarTruco()" style="background: transparent; border: none; border-bottom: 1px dashed #334155; color: #38bdf8; font-size: 0.9rem; font-weight: 700; text-align: center; width: 100%; margin-bottom: 0.5rem; padding-bottom: 0.2rem;">
-            <div style="font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.2rem;" id="eq1-fase">Fase: Malas</div>
-            <div id="eq1-puntos" style="font-size: 3rem; font-weight: 900; color: #fff; line-height: 1; margin: 0.5rem 0;">0</div>
+            <input type="text" id="eq1-nombre" value="Nosotros" onchange="guardarTruco()" style="background: transparent; border: none; border-bottom: 1px dashed #334155; color: #38bdf8; font-size: 0.9rem; font-weight: 700; text-align: center; width: 100%; margin-bottom: 0.2rem; padding-bottom: 0.2rem;">
+            
+            <!-- SECCIÓN MALAS (0 a 15) -->
+            <div class="section-title-truco">Malas (0 - 15) [Puntos: <span id="eq1-malas-num">0</span>]</div>
+            <div id="eq1-malas-container" class="blocks-container"></div>
+
+            <!-- SECCIÓN BUENAS (16 a 30) -->
+            <div class="section-title-truco">Buenas (16 - 30) [Puntos: <span id="eq1-buenas-num">0</span>]</div>
+            <div id="eq1-buenas-container" class="blocks-container"></div>
           </div>
 
           <!-- Botones de Sumar / Restar Equipo 1 -->
@@ -56,11 +139,17 @@
         </div>
 
         <!-- EQUIPO 2 -->
-        <div class="card" style="padding: 1rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="team-card">
           <div>
-            <input type="text" id="eq2-nombre" value="Ellos" onchange="guardarTruco()" style="background: transparent; border: none; border-bottom: 1px dashed #334155; color: #34d399; font-size: 0.9rem; font-weight: 700; text-align: center; width: 100%; margin-bottom: 0.5rem; padding-bottom: 0.2rem;">
-            <div style="font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.2rem;" id="eq2-fase">Fase: Malas</div>
-            <div id="eq2-puntos" style="font-size: 3rem; font-weight: 900; color: #fff; line-height: 1; margin: 0.5rem 0;">0</div>
+            <input type="text" id="eq2-nombre" value="Ellos" onchange="guardarTruco()" style="background: transparent; border: none; border-bottom: 1px dashed #334155; color: #34d399; font-size: 0.9rem; font-weight: 700; text-align: center; width: 100%; margin-bottom: 0.2rem; padding-bottom: 0.2rem;">
+            
+            <!-- SECCIÓN MALAS (0 a 15) -->
+            <div class="section-title-truco">Malas (0 - 15) [Puntos: <span id="eq2-malas-num">0</span>]</div>
+            <div id="eq2-malas-container" class="blocks-container"></div>
+
+            <!-- SECCIÓN BUENAS (16 a 30) -->
+            <div class="section-title-truco">Buenas (16 - 30) [Puntos: <span id="eq2-buenas-num">0</span>]</div>
+            <div id="eq2-buenas-container" class="blocks-container"></div>
           </div>
 
           <!-- Botones de Sumar / Restar Equipo 2 -->
@@ -79,7 +168,7 @@
   </div>
 
   <script>
-    let partida = JSON.parse(localStorage.getItem('platita_truco_partida')) || {
+    let partida = JSON.parse(localStorage.getItem('platita_truco_partida_v2')) || {
       eq1Nombre: 'Nosotros',
       eq1Puntos: 0,
       eq2Nombre: 'Ellos',
@@ -95,7 +184,7 @@
     function cambiarPagina(urlDestino) {
       const overlay = document.getElementById('transition-overlay');
       if (overlay) overlay.classList.add('active');
-      setTimeout(() => { window.location.href = urlDestino; }, 2000);
+      setTimeout(() => { window.location.href = './' + urlDestino; }, 500);
     }
 
     window.addEventListener('pageshow', () => {
@@ -121,7 +210,7 @@
     function guardarTruco() {
       partida.eq1Nombre = document.getElementById('eq1-nombre').value.trim() || 'Nosotros';
       partida.eq2Nombre = document.getElementById('eq2-nombre').value.trim() || 'Ellos';
-      localStorage.setItem('platita_truco_partida', JSON.stringify(partida));
+      localStorage.setItem('platita_truco_partida_v2', JSON.stringify(partida));
       actualizarPantallaTruco();
     }
 
@@ -133,16 +222,60 @@
       }
     }
 
+    // Función auxiliar para renderizar los palitos agrupados de a 5 (cuadrados tachados)
+    function renderizarBloquesTruco(puntosTotales, containerId, numSpanId) {
+      const container = document.getElementById(containerId);
+      const numSpan = document.getElementById(numSpanId);
+      if (!container || !numSpan) return;
+
+      numSpan.innerText = puntosTotales;
+      container.innerHTML = '';
+
+      if (puntosTotales === 0) {
+        container.innerHTML = '<span style="color: #64748b; font-size: 0.68rem; font-style: italic;">Sin tantos</span>';
+        return;
+      }
+
+      let gruposDe5 = Math.floor(puntosTotales / 5);
+      let sueltos = puntosTotales % 5;
+
+      // Dibujar los cuadrados completos (de 5)
+      for (let i = 0; i < gruposDe5; i++) {
+        const block = document.createElement('div');
+        block.className = 'truco-block completed';
+        container.appendChild(block);
+      }
+
+      // Dibujar los palitos sueltos restantes (1 al 4)
+      if (sueltos > 0) {
+        const looseDiv = document.createElement('div');
+        looseDiv.className = 'loose-sticks';
+        for (let j = 0; j < sueltos; j++) {
+          const stick = document.createElement('div');
+          stick.className = 'stick';
+          looseDiv.appendChild(stick);
+        }
+        container.appendChild(looseDiv);
+      }
+    }
+
     function actualizarPantallaTruco() {
-      document.getElementById('eq1-puntos').innerText = partida.eq1Puntos;
-      document.getElementById('eq2-puntos').innerText = partida.eq2Puntos;
+      // En el truco argentino, las "Malas" van de 0 a 15, y las "Buenas" de 0 a 15 contadas de nuevo.
+      // Si tiene 12 puntos, en malas tiene 12. Si tiene 18 puntos, en malas tiene 15 y en buenas tiene 3 (18 - 15).
+      
+      const p1 = partida.eq1Puntos;
+      const p1Malas = Math.min(15, p1);
+      const p1Buenas = p1 > 15 ? p1 - 15 : 0;
 
-      // Detectar si están en malas (0-15) o buenas (16-30)
-      const fase1 = partida.eq1Puntos > 15 ? 'Fase: Buenas ✨' : 'Fase: Malas 🛑';
-      const fase2 = partida.eq2Puntos > 15 ? 'Fase: Buenas ✨' : 'Fase: Malas 🛑';
+      const p2 = partida.eq2Puntos;
+      const p2Malas = Math.min(15, p2);
+      const p2Buenas = p2 > 15 ? p2 - 15 : 0;
 
-      document.getElementById('eq1-fase').innerText = fase1;
-      document.getElementById('eq2-fase').innerText = fase2;
+      renderizarBloquesTruco(p1Malas, 'eq1-malas-container', 'eq1-malas-num');
+      renderizarBloquesTruco(p1Buenas, 'eq1-buenas-container', 'eq1-buenas-num');
+
+      renderizarBloquesTruco(p2Malas, 'eq2-malas-container', 'eq2-malas-num');
+      renderizarBloquesTruco(p2Buenas, 'eq2-buenas-container', 'eq2-buenas-num');
     }
   </script>
 </body>
