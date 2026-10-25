@@ -145,11 +145,10 @@
       return parseFloat(limpio) || 0;
     }
 
-  function cambiarPagina(urlDestino) {
+    function cambiarPagina(urlDestino) {
       const overlay = document.getElementById('transition-overlay');
       if (overlay) overlay.classList.add('active');
       setTimeout(() => { 
-        // Forzamos ruta absoluta o relativa limpia para evitar bloqueos
         window.location.href = './' + urlDestino; 
       }, 500);
     }
@@ -286,7 +285,7 @@
               <span class="expense-amount">${formatearDinero(g.amount)}</span>
             </div>
             <div class="fixed-actions">
-              <button class="btn-delete-fixed" onclick="eliminarGasto(${g.id})">🗑️</button>
+              <button class="btn-delete-fixed" onclick="deleteGasto(${g.id})">🗑️</button>
             </div>
           `;
           expensesListUl.appendChild(li);
@@ -356,4 +355,54 @@
       }
 
       if (ultimasTransaccionesCalculadas.length === 0) {
-        resultsContainer.innerHTML = '<div style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0
+        resultsContainer.innerHTML = '<div style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0.6rem; border-radius: 0.4rem; text-align: center; font-size: 0.75rem; font-weight: 600;">✨ ¡Cuentas saldadas! Nadie le debe nada a nadie.</div>';
+        if (btnWa) btnWa.style.display = 'none';
+      } else {
+        ultimasTransaccionesCalculadas.forEach(t => {
+          const acreedorObj = integrantes.find(p => p.nombre === t.a);
+          const aliasAcreedor = acreedorObj ? acreedorObj.alias : 'Sin alias';
+
+          const div = document.createElement('div');
+          div.style.cssText = 'background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 0.6rem; border-radius: 0.4rem; display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.75rem;';
+          div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #f1f5f9;"><strong>${t.de}</strong> le debe a <strong>${t.a}</strong></span>
+              <span style="color: #34d399; font-weight: 700;">${formatearDinero(t.monto)}</span>
+            </div>
+            <div style="display: flex; gap: 0.3rem; margin-top: 0.2rem;">
+              <button onclick="copiarAlias('${aliasAcreedor}')" style="flex: 1; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; padding: 0.3rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">💳 Copiar Alias (${aliasAcreedor})</button>
+              <button onclick="reclamarWhatsApp('${t.de}', '${t.a}', ${t.monto})" style="background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.3rem 0.5rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">📢 Reclamar</button>
+            </div>
+          `;
+          resultsContainer.appendChild(div);
+        });
+        if (btnWa) btnWa.style.display = 'block';
+      }
+    }
+
+    function compartirWhatsAppVaquita() {
+      let texto = `🍻 *RESUMEN DE LA JUNTADITA - PLATITA* 🍻\n\n`;
+      texto += `👥 *Integrantes:* ${integrantes.map(p => `${p.emoji} ${p.nombre} (${p.alias})`).join(', ')}\n`;
+      texto += `💰 *Gasto Total:* ${document.getElementById('total-vaquita-amount').innerText}\n\n`;
+      texto += `📝 *Detalle de Gastos:* \n`;
+      
+      gastosVaquita.forEach(g => {
+        texto += `• ${g.desc}: ${formatearDinero(g.amount)} (Pagó ${g.payer})\n`;
+      });
+
+      texto += `\n💸 *CÓMO SALDAR CUENTAS:*\n`;
+      ultimasTransaccionesCalculadas.forEach(t => {
+        const acreedorObj = integrantes.find(p => p.nombre === t.a);
+        const aliasAcreedor = acreedorObj ? acreedorObj.alias : 'Sin alias';
+        const aliasStr = aliasAcreedor !== 'Sin alias' ? ` (Alias: \`${aliasAcreedor}\`)` : '';
+        texto += `👉 *${t.de}* le debe a *${t.a}* ➔ *${formatearDinero(t.monto)}* ${aliasStr}\n`;
+      });
+
+      texto += `\n✨ _Calculado con Platita App_`;
+
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+      window.open(url, '_blank');
+    }
+  </script>
+</body>
+</html>
