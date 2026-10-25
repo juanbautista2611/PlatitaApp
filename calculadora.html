@@ -145,10 +145,13 @@
       return parseFloat(limpio) || 0;
     }
 
-    function cambiarPagina(urlDestino) {
+  function cambiarPagina(urlDestino) {
       const overlay = document.getElementById('transition-overlay');
       if (overlay) overlay.classList.add('active');
-      setTimeout(() => { window.location.href = urlDestino; }, 2000);
+      setTimeout(() => { 
+        // Forzamos ruta absoluta o relativa limpia para evitar bloqueos
+        window.location.href = './' + urlDestino; 
+      }, 500);
     }
 
     window.addEventListener('pageshow', () => {
