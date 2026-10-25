@@ -236,11 +236,13 @@
       });
     }
 
-    function reclamarWhatsApp(deudor, acreedor, monto) {
+function reclamarWhatsApp(deudor, acreedor, monto) {
       const acreedorObj = integrantes.find(p => p.nombre === acreedor);
       const aliasValor = acreedorObj ? acreedorObj.alias : 'Sin alias';
-      const aliasTexto = aliasValor !== 'Sin alias' ? ` (Alias: \`${aliasValor}\`)` : '';
-      const texto = `Hola ${deudor}! 👋 Te escribo porque quedaron pendientes ${formatearDinero(monto)} de la juntadita para ${acreedor}${aliasTexto}. ¡Avisame cuando puedas transferir! 🍻`;
+      
+      // Mensaje informal, de amigos y con el alias destacado (copiable al toque)
+      const texto = `Hola crack ${deudor}!! Che me debes ${formatearDinero(monto)} no te hagas el ratón 🐀 y pagame 🤑\n\nacá te dejo el alias mío: \`${aliasValor}\``;
+      
       const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
       window.open(url, '_blank');
     }
