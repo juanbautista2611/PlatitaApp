@@ -236,11 +236,11 @@
       });
     }
 
-function reclamarWhatsApp(deudor, acreedor, monto) {
+    function reclamarWhatsApp(deudor, acreedor, monto) {
       const acreedorObj = integrantes.find(p => p.nombre === acreedor);
       const aliasValor = acreedorObj ? acreedorObj.alias : 'Sin alias';
       
-      // Mensaje informal, de amigos y con el alias destacado (copiable al toque)
+      // Mensaje informal de amigos con el alias destacado (copiable al toque)
       const texto = `Hola crack ${deudor}!! Che me debes ${formatearDinero(monto)} no te hagas el ratón 🐀 y pagame 🤑\n\nacá te dejo el alias mío: \`${aliasValor}\``;
       
       const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
@@ -287,7 +287,7 @@ function reclamarWhatsApp(deudor, acreedor, monto) {
               <span class="expense-amount">${formatearDinero(g.amount)}</span>
             </div>
             <div class="fixed-actions">
-              <button class="btn-delete-fixed" onclick="deleteGasto(${g.id})">🗑️</button>
+              <button class="btn-delete-fixed" onclick="eliminarGasto(${g.id})">🗑️</button>
             </div>
           `;
           expensesListUl.appendChild(li);
@@ -371,9 +371,10 @@ function reclamarWhatsApp(deudor, acreedor, monto) {
               <span style="color: #f1f5f9;"><strong>${t.de}</strong> le debe a <strong>${t.a}</strong></span>
               <span style="color: #34d399; font-weight: 700;">${formatearDinero(t.monto)}</span>
             </div>
-            <div style="display: flex; gap: 0.3rem; margin-top: 0.2rem;">
-              <button onclick="copiarAlias('${aliasAcreedor}')" style="flex: 1; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; padding: 0.3rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">💳 Copiar Alias (${aliasAcreedor})</button>
-              <button onclick="reclamarWhatsApp('${t.de}', '${t.a}', ${t.monto})" style="background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.3rem 0.5rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">📢 Reclamar</button>
+            <div style="display: flex; gap: 0.3rem; margin-top: 0.2rem; flex-wrap: wrap;">
+              <button onclick="copiarAlias('${aliasAcreedor}')" style="flex: 1; min-width: 100px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; padding: 0.3rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">💳 Copiar Alias</button>
+              <a href="mercadopago://" onclick="setTimeout(() => { window.location.href = 'https://www.mercadopago.com.ar'; }, 500);" style="flex: 1; min-width: 90px; background: rgba(0, 158, 227, 0.2); border: 1px solid rgba(0, 158, 227, 0.4); color: #38bdf8; padding: 0.3rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; text-align: center; text-decoration: none; display: inline-block;">💙 Abrir MP</a>
+              <button onclick="reclamarWhatsApp('${t.de}', '${t.a}', ${t.monto})" style="width: 100%; background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.35rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">📢 Reclamar por WhatsApp</button>
             </div>
           `;
           resultsContainer.appendChild(div);
