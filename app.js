@@ -108,7 +108,7 @@ async function verificarAlertasVencimientos() {
     const vencDate = new Date(ev.due_date);
     const diffTime = vencDate - hoyDate;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 4;
+    return diffDays <= 4; // Te avisa si faltan 4 días o menos, o si ya venció
   });
 
   if (proximos.length === 0) {
@@ -128,7 +128,6 @@ async function verificarAlertasVencimientos() {
     container.appendChild(row);
   });
 }
-
 function actualizarFechaBadge() {
   const badge = document.getElementById('current-date-badge');
   if (badge) {
