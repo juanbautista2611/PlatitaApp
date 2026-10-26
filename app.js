@@ -95,20 +95,27 @@ async function verificarAlertasVencimientos() {
   const container = document.getElementById('alerts-container');
   if (!section || !container) return;
 
-  const { data: events } = await supabaseClient.from('calendar_events').select('*').eq('status', 'pending');
-  if (!events || events.length === 0) {
+  const { data: events, error } = await supabaseClient
+    .from('calendar_events')
+    .select('*')
+    .eq('status', 'pending');
+
+  if (error || !events || events.length === 0) {
     section.style.display = 'none';
     return;
   }
 
-  const hoyStr = new Date().toISOString().split('T')[0];
-  const hoyDate = new Date(hoyStr);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
 
   const proximos = events.filter(ev => {
-    const vencDate = new Date(ev.due_date);
-    const diffTime = vencDate - hoyDate;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 4; // Te avisa si faltan 4 días o menos, o si ya venció
+    const partes = ev.due_date.split('-');
+    if (partes.length !== 3) return false;
+    const vencDate = new Date(partes[0], partes[1] - 1, partes[2]);
+    vencDate.setHours(0, 0, 0, 0);
+
+    const diffDays = Math.round((vencDate - hoy) / (1000 * 60 * 60 * 24));
+    return diffDays <= 4;
   });
 
   if (proximos.length === 0) {
@@ -118,6 +125,7 @@ async function verificarAlertasVencimientos() {
 
   section.style.display = 'block';
   container.innerHTML = '';
+  
   proximos.forEach(ev => {
     const row = document.createElement('div');
     row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.4); padding: 0.4rem 0.6rem; border-radius: 0.3rem;';
@@ -127,6 +135,15 @@ async function verificarAlertasVencimientos() {
     `;
     container.appendChild(row);
   });
+
+  // Disparar notificación nativa al Service Worker si hay vencimientos y el celu da permiso
+  if (navigator.serviceWorker && navigator.serviceWorker.controller && Notification.permission === 'granted') {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'MOSTRAR_NOTIFICACION',
+      title: '⚠️ ¡Atento con los pagos!',
+      body: `Tenés ${proximos.length} vencimiento(s) próximo(s) por abonar.`
+    });
+  }
 }
 function actualizarFechaBadge() {
   const badge = document.getElementById('current-date-badge');

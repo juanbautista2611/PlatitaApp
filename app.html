@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="styles.css">
   <!-- Chart.js para los gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#3b82f6">
 </head>
 <body>
 
@@ -150,6 +153,33 @@
       const overlay = document.getElementById('transition-overlay');
       if (overlay) overlay.classList.remove('active');
     });
+
+
+<script>
+  // Registrar el Service Worker para habilitar la app en el celu
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then((reg) => {
+          console.log('Service Worker registrado con éxito:', reg.scope);
+          
+          // Pedir permiso de notificaciones al usuario
+          if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted') {
+                console.log('Permiso de notificaciones concedido.');
+              }
+            });
+          }
+        })
+        .catch((err) => {
+          console.log('Error al registrar el Service Worker:', err);
+        });
+    });
+  }
+</script>
+
+
   </script>
 </body>
 </html>
