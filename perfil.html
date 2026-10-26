@@ -45,6 +45,9 @@
             <strong style="color: #34d399;">Protegido y Privado (RLS)</strong>
           </div>
         </div>
+
+        <!-- Botón manual para pedir permisos de notificaciones en el celu -->
+        <button onclick="pedirPermisoNotificaciones()" style="width: 100%; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; padding: 0.7rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-top: 1rem;">🔔 Activar Notificaciones Push</button>
       </section>
 
       <!-- Calendario / Vencimientos Visuales -->
@@ -110,6 +113,29 @@
       const overlay = document.getElementById('transition-overlay');
       if (overlay) overlay.classList.remove('active');
     });
+
+    // Función para forzar la solicitud de permisos de notificaciones desde el botón
+    function pedirPermisoNotificaciones() {
+      if (!('Notification' in window)) {
+        alert('Este navegador no soporta notificaciones.');
+        return;
+      }
+
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          alert('¡Buenísimo! Notificaciones activadas con éxito. 🚀');
+          if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: 'MOSTRAR_NOTIFICACION',
+              title: 'Platita App',
+              body: '¡Las notificaciones ya están listas para avisarte de tus vencimientos!'
+            });
+          }
+        } else {
+          alert('Permiso denegado. Habilitalo desde los ajustes del navegador de tu celu.');
+        }
+      });
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       const { data: { user } } = await supabaseClient.auth.getUser();

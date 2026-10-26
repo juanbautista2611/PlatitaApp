@@ -51,7 +51,7 @@
         </button>
       </section>
 
-  <!-- Alertas de Vencimientos Próximos -->
+      <!-- Alertas de Vencimientos Próximos -->
       <section id="alerts-widget-section" class="card" style="margin-bottom: 1.25rem; display: none; border-left: 3px solid #f87171; background: rgba(239, 68, 68, 0.05);">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
           <span style="font-size: 1rem;">⚠️</span>
@@ -74,7 +74,7 @@
         </div>
       </section>
 
-      <!-- SECCIÓN DE SUELDO / INGRESOS RÁPIDO (Directo debajo del saldo) -->
+      <!-- SECCIÓN DE SUELDO / INGRESOS RÁPIDO -->
       <section class="card" style="margin-bottom: 1.25rem; padding: 1.25rem; background: rgba(52, 211, 153, 0.05); border: 1px solid rgba(52, 211, 153, 0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
@@ -87,7 +87,6 @@
           </div>
         </div>
         
-        <!-- Formulario rápido de ingreso / sueldo -->
         <form id="quick-income-form" style="display: flex; gap: 0.4rem; border-top: 1px solid rgba(52, 211, 153, 0.2); padding-top: 0.75rem; margin-top: 0.5rem;">
           <input type="text" inputmode="numeric" id="quick-income-amount" placeholder="Cargar Sueldo/Ingreso ($)" required oninput="formatearInputMoneda(this)" style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.5rem; border-radius: 0.4rem; font-size: 0.8rem;">
           <button type="submit" style="background: #34d399; border: none; color: #05070b; padding: 0.5rem 0.8rem; border-radius: 0.4rem; font-size: 0.75rem; font-weight: 700; cursor: pointer;">+ Cargar Sueldo</button>
@@ -130,7 +129,7 @@
         </ul>
       </section>
 
-      <!-- Footer con Herramientas de Vaquita y Viajes -->
+      <!-- Footer con Herramientas -->
       <section class="card" style="margin-bottom: 2rem; text-align: center;">
         <h3 style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em;">Herramientas y Divisorias</h3>
         <div style="display: flex; gap: 0.5rem;">
@@ -154,32 +153,18 @@
       if (overlay) overlay.classList.remove('active');
     });
 
-
-<script>
-  // Registrar el Service Worker para habilitar la app en el celu
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then((reg) => {
-          console.log('Service Worker registrado con éxito:', reg.scope);
-          
-          // Pedir permiso de notificaciones al usuario
-          if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-            Notification.requestPermission().then(permission => {
-              if (permission === 'granted') {
-                console.log('Permiso de notificaciones concedido.');
-              }
-            });
-          }
-        })
-        .catch((err) => {
-          console.log('Error al registrar el Service Worker:', err);
-        });
-    });
-  }
-</script>
-
-
+    // Registrar el Service Worker de forma limpia
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then((reg) => {
+            console.log('Service Worker registrado con éxito:', reg.scope);
+          })
+          .catch((err) => {
+            console.log('Error al registrar el Service Worker:', err);
+          });
+      });
+    }
   </script>
 </body>
 </html>
