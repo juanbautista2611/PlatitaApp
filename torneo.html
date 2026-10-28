@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Platita - Torneo de Play 🎮</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .tournament-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .match-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid #334155;
+      border-radius: 0.75rem;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .match-header {
+      font-size: 0.68rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 0.2rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .match-players {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .player-slot {
+      flex: 1;
+      background: rgba(7, 10, 17, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .player-slot:hover {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .player-slot.winner {
+      background: rgba(52, 211, 153, 0.2);
+      border-color: #34d399;
+      color: #34d399;
+    }
+    .vs-text {
+      font-size: 0.7rem;
+      color: #64748b;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Pantalla de carga / Transición -->
+  <div id="transition-overlay" class="page-transition-overlay">
+    <div class="loader-spinner"></div>
+    <span class="loader-text">Cargando Torneo...</span>
+  </div>
+
+  <div class="app-container">
+    <main class="main-content">
+      <!-- Header Superior -->
+      <header class="top-header">
+        <div class="header-top-row">
+          <h1 class="logo-title">🎮 Torneo de Play</h1>
+          <div class="header-right">
+            <a href="#" onclick="cambiarPagina('app.html'); return false;" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.3rem 0.6rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; text-decoration: none;">Volver</a>
+          </div>
+        </div>
+        <div class="welcome-block">
+          <span class="greeting-sub">Fútbol, fichines y gastadas</span>
+          <h2 style="font-size: 1.2rem;">Llaves y Campeón</h2>
+        </div>
+      </header>
+
+      <!-- Paso 1: Agregar Jugadores -->
+      <section class="card form-container-card" style="margin-bottom: 1.25rem;">
+        <h3>1. Anotar Jugadores (Ideal 4, 8 o 16)</h3>
+        <form id="add-player-form" style="display: flex; gap: 0.4rem; margin-top: 0.75rem;">
+          <input type="text" id="player-name" placeholder="Nombre (Ej: Juan)" required style="flex: 1; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: #fff; padding: 0.5rem; border-radius: 0.4rem; font-size: 0.75rem;">
+          <button type="submit" class="btn-sub" style="padding: 0.5rem 0.8rem; font-size: 0.7rem;">+ Añadir</button>
+        </form>
+        <div id="players-chips-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;"></div>
+        
+        <button onclick="sortearLlaves()" style="width: 100%; margin-top: 1rem; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: none; color: #fff; padding: 0.7rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 700; cursor: pointer;">🎲 Sortear Fixture al Azar</button>
+      </section>
+
+      <!-- Paso 2: Visualización de Llaves y Ganadores -->
+      <section class="card section-box" style="margin-bottom: 1.25rem;">
+        <div class="section-title-row">
+          <h3>2. Cruces y Fases</h3>
+        </div>
+        <div id="tournament-bracket" class="tournament-grid">
+          <span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 1rem;">Agregá jugadores y dale a sortear para armar las llaves.</span>
+        </div>
+      </section>
+
+      <!-- Botón de Reiniciar Torneo -->
+      <section style="margin-bottom: 2rem; text-align: right;">
+        <button onclick="reiniciarTorneo()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.4rem 0.8rem; border-radius: 0.4rem; font-size: 0.7rem; font-weight: 600; cursor: pointer;">🗑️ Reiniciar Torneo</button>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    let torneo = JSON.parse(localStorage.getItem('platita_torneo_play')) || {
+      jugadores: [],
+      fase: 'cuartos', // cuartos, semis, final
+      partidos: []
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      actualizarInterfazTorneo();
+
+      const form = document.getElementById('add-player-form');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('player-name');
+        const nombre = input.value.trim();
+
+        if (nombre && !torneo.jugadores.includes(nombre)) {
+          torneo.jugadores.push(nombre);
+          input.value = '';
+          guardarYActualizar();
+        } else {
+          alert('Nombre duplicado o vacío.');
+        }
+      });
+    });
+
+    function cambiarPagina(urlDestino) {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.add('active');
+      setTimeout(() => { window.location.href = './' + urlDestino; }, 500);
+    }
+
+    window.addEventListener('pageshow', () => {
+      const overlay = document.getElementById('transition-overlay');
+      if (overlay) overlay.classList.remove('active');
+    });
+
+    function guardarYActualizar() {
+      localStorage.setItem('platita_torneo_play', JSON.stringify(torneo));
+      actualizarInterfazTorneo();
+    }
+
+    function eliminarJugador(nombre) {
+      torneo.jugadores = torneo.jugadores.filter(j => j !== nombre);
+      guardarYActualizar();
+    }
+
+    function reiniciarTorneo() {
+      if (confirm('¿Borrar todo y armar nuevo torneo?')) {
+        torneo = { jugadores: [], fase: 'cuartos', partidos: [] };
+        guardarYActualizar();
+      }
+    }
+
+    function sortearLlaves() {
+      if (torneo.jugadores.length < 2) {
+        alert('Necesitas al menos 2 jugadores para sortear.');
+        return;
+      }
+
+      // Mezclar al azar (Fisher-Yates)
+      let mezcla = [...torneo.jugadores];
+      for (let i = mezcla.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [mezcla[i], mezcla[j]] = [mezcla[j], mezcla[i]];
+      }
+
+      let partidosIniciales = [];
+      for (let i = 0; i < mezcla.length; i += 2) {
+        if (mezcla[i + 1]) {
+          partidosIniciales.push({
+            id: 'm_' + Math.random(),
+            p1: mezcla[i],
+            p2: mezcla[i + 1],
+            ganador: null
+          });
+        } else {
+          // Si sobra uno por número impar, pasa directo
+          partidosIniciales.push({
+            id: 'm_' + Math.random(),
+            p1: mezcla[i],
+            p2: 'LIBRE (Pasa directo)',
+            ganador: mezcla[i]
+          });
+        }
+      }
+
+      torneo.partidos = partidosIniciales;
+      guardarYActualizar();
+    }
+
+    function seleccionarGanador(indexPartido, ganadorNombre) {
+      let p = torneo.partidos[indexPartido];
+      if (p.p2 === 'LIBRE (Pasa directo)') return;
+      
+      p.ganador = ganadorNombre;
+      guardarYActualizar();
+
+      // Verificar si ya terminaron todos los partidos de esta ronda para avanzar a la siguiente
+      verificarProgresoRonda();
+    }
+
+    function verificarProgresoRonda() {
+      // Si todos los partidos de la lista tienen ganador, armamos la siguiente fase automáticamente
+      let todosTienenGanador = torneo.partidos.every(p => p.ganador !== null);
+      if (todosTienenGanador && torneo.partidos.length > 1) {
+        let ganadores = torneo.partidos.map(p => p.ganador);
+        let siguientesPartidos = [];
+
+        for (let i = 0; i < ganadores.length; i += 2) {
+          if (ganadores[i + 1]) {
+            siguientesPartidos.push({
+              id: 'm_' + Math.random(),
+              p1: ganadores[i],
+              p2: ganadores[i + 1],
+              ganador: null
+            });
+          }
+        }
+        if (siguientesPartidos.length > 0) {
+          torneo.partidos = siguientesPartidos;
+          guardarYActualizar();
+        }
+      }
+    }
+
+    function actualizarInterfazTorneo() {
+      const chipsContainer = document.getElementById('players-chips-container');
+      chipsContainer.innerHTML = '';
+
+      if (torneo.jugadores.length === 0) {
+        chipsContainer.innerHTML = '<span style="color: #64748b; font-size: 0.7rem;">No hay jugadores anotados.</span>';
+      }
+
+      torneo.jugadores.forEach(j => {
+        const chip = document.createElement('div');
+        chip.style.cssText = 'background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem; display: flex; align-items: center; gap: 0.4rem;';
+        chip.innerHTML = `🎮 ${j} <span style="cursor: pointer; font-weight: bold; color: #f87171;" onclick="eliminarJugador('${j}')">×</span>`;
+        chipsContainer.appendChild(chip);
+      });
+
+      const bracketContainer = document.getElementById('tournament-bracket');
+      bracketContainer.innerHTML = '';
+
+      if (torneo.partidos.length === 0) {
+        bracketContainer.innerHTML = '<span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 1rem;">Agregá jugadores y dale a sortear para armar las llaves.</span>';
+        return;
+      }
+
+      // Comprobar si hay un campeón absoluto (1 solo partido restante con ganador definido)
+      if (torneo.partidos.length === 1 && torneo.partidos[0].ganador !== null) {
+        const champ = torneo.partidos[0].ganador;
+        bracketContainer.innerHTML = `
+          <div style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.4); padding: 1.5rem; border-radius: 0.75rem; text-align: center;">
+            <span style="font-size: 1.5rem;">🏆</span>
+            <h3 style="color: #34d399; font-size: 1.1rem; margin: 0.4rem 0;">¡CAMPEÓN DEL TORNEO!</h3>
+            <p style="font-size: 1rem; font-weight: 800; color: #fff;">${champ}</p>
+          </div>
+        `;
+        return;
+      }
+
+      torneo.partidos.forEach((p, idx) => {
+        const card = document.createElement('div');
+        card.className = 'match-card';
+        card.innerHTML = `
+          <div class="match-header">
+            <span>Partido #${idx + 1}</span>
+            <span>${p.ganador ? '✅ Definido' : '⏳ En juego'}</span>
+          </div>
+          <div class="match-players">
+            <div class="player-slot ${p.ganador === p.p1 ? 'winner' : ''}" onclick="seleccionarGanador(${idx}, '${p.p1}')">
+              ${p.p1}
+            </div>
+            <span class="vs-text">VS</span>
+            <div class="player-slot ${p.ganador === p.p2 ? 'winner' : ''}" onclick="seleccionarGanador(${idx}, '${p.p2}')">
+              ${p.p2}
+            </div>
+          </div>
+        `;
+        bracketContainer.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
