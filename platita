@@ -1,0 +1,11 @@
+user.name=Juan Bautista Romiti
+user.email=juan.romiti@unr.edu.ar
+core.repositoryformatversion=0
+core.filemode=true
+core.bare=false
+core.logallrefupdates=true
+remote.origin.url=https://github.com/juanbautista2611/PlatitaApp
+remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+branch.main.remote=origin
+branch.main.merge=refs/heads/main
+branch.main.vscode-merge-base=origin/main
