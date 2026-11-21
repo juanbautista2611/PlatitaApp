@@ -9,13 +9,9 @@
 <body>
 
   <!-- Pantalla de carga / Transición -->
-<div id="transition-overlay" class="page-transition-overlay">
-    <div style="width: 100%; max-width: 480px; margin: 0 auto; padding-top: 1rem;">
-      <div class="skeleton-header"></div>
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card-lg"></div>
-      <div class="skeleton-card"></div>
-    </div>
+  <div id="transition-overlay" class="page-transition-overlay">
+    <div class="loader-spinner"></div>
+    <span class="loader-text">Cargando Platita...</span>
   </div>
 
   <div class="app-container">
@@ -370,4 +366,93 @@
 
       if (nombresIntegrantes.length === 0 || totalGeneral === 0) {
         resultsContainer.innerHTML = '<span style="color: #64748b; font-size: 0.75rem; text-align: center; display: block; padding: 0.5rem;">Agregá integrantes y gastos para calcular.</span>';
-        if (btnWa) btn
+        if (btnWa) btnWa.style.display = 'none';
+        return;
+      }
+
+      const balances = [];
+      nombresIntegrantes.forEach(p => {
+        const balance = pagadoPorPersona[p] - debePorPersona[p];
+        balances.push({ nombre: p, balance: balance });
+      });
+
+      let deudores = balances.filter(b => b.balance < -1).map(b => ({ ...b }));
+      let acreedores = balances.filter(b => b.balance > 1).map(b => ({ ...b }));
+
+      resultsContainer.innerHTML = '';
+      ultimasTransaccionesCalculadas = [];
+
+      let d = 0, a = 0;
+      while (d < deudores.length && a < acreedores.length) {
+        let deudor = deudores[d];
+        let acreedor = acreedores[a];
+
+        let montoABajar = Math.min(Math.abs(deudor.balance), acreedor.balance);
+
+        ultimasTransaccionesCalculadas.push({
+          de: deudor.nombre,
+          a: acreedor.nombre,
+          monto: Math.round(montoABajar)
+        });
+
+        deudor.balance += montoABajar;
+        acreedor.balance -= montoABajar;
+
+        if (Math.abs(deudor.balance) < 1) d++;
+        if (acreedor.balance < 1) a++;
+      }
+
+      if (ultimasTransaccionesCalculadas.length === 0) {
+        resultsContainer.innerHTML = '<div style="background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 0.6rem; border-radius: 0.4rem; text-align: center; font-size: 0.75rem; font-weight: 600;">✨ ¡Cuentas saldadas! Nadie le debe nada a nadie.</div>';
+        if (btnWa) btnWa.style.display = 'none';
+      } else {
+        ultimasTransaccionesCalculadas.forEach(t => {
+          const acreedorObj = integrantes.find(p => p.nombre === t.a);
+          const aliasAcreedor = acreedorObj ? acreedorObj.alias : 'Sin alias';
+
+          const div = document.createElement('div');
+          div.style.cssText = 'background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 0.6rem; border-radius: 0.4rem; display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.75rem;';
+          div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #f1f5f9;"><strong>${t.de}</strong> le debe a <strong>${t.a}</strong></span>
+              <span style="color: #34d399; font-weight: 700;">${formatearDinero(t.monto)}</span>
+            </div>
+            <div style="display: flex; gap: 0.3rem; margin-top: 0.2rem; flex-wrap: wrap;">
+              <button onclick="copiarAlias('${aliasAcreedor}')" style="flex: 1; min-width: 100px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; padding: 0.3rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">💳 Copiar Alias</button>
+              <a href="mercadopago://" onclick="setTimeout(() => { window.location.href = 'https://www.mercadopago.com.ar'; }, 500);" style="flex: 1; min-width: 90px; background: rgba(0, 158, 227, 0.2); border: 1px solid rgba(0, 158, 227, 0.4); color: #38bdf8; padding: 0.3rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; text-align: center; text-decoration: none; display: inline-block;">💙 Abrir MP</a>
+              <button onclick="reclamarWhatsApp('${t.de}', '${t.a}', ${t.monto})" style="width: 100%; background: rgba(52, 211, 153, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 0.35rem; border-radius: 0.3rem; font-size: 0.68rem; font-weight: 600; cursor: pointer;">📢 Reclamar por WhatsApp</button>
+            </div>
+          `;
+          resultsContainer.appendChild(div);
+        });
+        if (btnWa) btnWa.style.display = 'block';
+      }
+    }
+
+    function compartirWhatsAppVaquita() {
+      let texto = `🍻 *RESUMEN DE LA JUNTADITA - PLATITA* 🍻\n\n`;
+      texto += `👥 *Integrantes:* ${integrantes.map(p => `${p.emoji} ${p.nombre} (${p.alias})`).join(', ')}\n`;
+      texto += `💰 *Gasto Total:* ${document.getElementById('total-vaquita-amount').innerText}\n\n`;
+      texto += `📝 *Detalle de Gastos:* \n`;
+      
+      gastosVaquita.forEach(g => {
+        const cantPart = g.participantes ? g.participantes.length : integrantes.length;
+        texto += `• ${g.desc}: ${formatearDinero(g.amount)} (Pagó ${g.payer} - ${cantPart} part.)\n`;
+      });
+
+      texto += `\n💸 *CÓMO SALDAR CUENTAS:*\n`;
+      ultimasTransaccionesCalculadas.forEach(t => {
+        const acreedorObj = integrantes.find(p => p.nombre === t.a);
+        const aliasAcreedor = acreedorObj ? acreedorObj.alias : 'Sin alias';
+        const aliasStr = aliasAcreedor !== 'Sin alias' ? ` (Alias: \`${aliasAcreedor}\`)` : '';
+        texto += `👉 *${t.de}* le debe a *${t.a}* ➔ *${formatearDinero(t.monto)}* ${aliasStr}\n`;
+      });
+
+      texto += `\n✨ _Calculado con Platita App_`;
+
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+      window.open(url, '_blank');
+    }
+  </script>
+</body>
+</html>
